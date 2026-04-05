@@ -18,6 +18,7 @@ local camera = workspace.CurrentCamera
 --// Variables
 local isStudio = RunService:IsStudio()
 local LocalPlayer = Players.LocalPlayer
+local isPremium = Settings.isPremium or false
 
 local windowState
 local acrylicBlur
@@ -69,7 +70,6 @@ end
 --// Library Functions
 function MacLib:Window(Settings)
 	local WindowFunctions = {Settings = Settings}
-	local isPremium = Settings.isPremium or false
 	if Settings.AcrylicBlur ~= nil then
 		acrylicBlur = Settings.AcrylicBlur
 	else
@@ -1611,19 +1611,18 @@ function MacLib:Window(Settings)
 				local lockFrame = Instance.new("Frame")
 				lockFrame.Name = "PremiumLockOverlay"
 				
-				-- Fix: Sử dụng ZIndex cao và lấp đầy toàn bộ Section
-				lockFrame.ZIndex = 100
-				lockFrame.Size = UDim2.new(1, 40, 1, 42) -- Bù đắp cho Padding của Section
-				lockFrame.Position = UDim2.fromOffset(-20, -22) -- Căn chỉnh lại điểm bắt đầu
+				lockFrame.Size = UDim2.new(1, 38, 1, 42) 
+				lockFrame.Position = UDim2.fromOffset(-20, -22)
+				
 				lockFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-				lockFrame.BackgroundTransparency = 0.7
+				lockFrame.BackgroundTransparency = 0.7 
+				lockFrame.ZIndex = 1000 
 				lockFrame.Active = true 
 				
 				local corner = Instance.new("UICorner")
-				corner.CornerRadius = UDim.new(0, 12)
+				corner.CornerRadius = UDim.new(0, 12) 
 				corner.Parent = lockFrame
 
-				-- Container nội dung để đảm bảo icon và chữ luôn ở giữa vùng bị khóa
 				local contentContainer = Instance.new("Frame")
 				contentContainer.Size = UDim2.fromScale(1, 1)
 				contentContainer.BackgroundTransparency = 1
@@ -1632,9 +1631,9 @@ function MacLib:Window(Settings)
 				local lockIcon = Instance.new("ImageLabel")
 				lockIcon.Name = "LockIcon"
 				lockIcon.Image = assets.globe
-				lockIcon.Size = UDim2.fromOffset(45, 45)
+				lockIcon.Size = UDim2.fromOffset(40, 40)
 				lockIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-				lockIcon.Position = UDim2.fromScale(0.5, 0.45)
+				lockIcon.Position = UDim2.fromScale(0.5, 0.4)
 				lockIcon.BackgroundTransparency = 1
 				lockIcon.ImageColor3 = Color3.fromRGB(255, 215, 0)
 				lockIcon.Parent = contentContainer
@@ -1643,9 +1642,9 @@ function MacLib:Window(Settings)
 				lockText.Text = "PREMIUM FEATURE"
 				lockText.FontFace = Font.new(assets.interFont, Enum.FontWeight.Bold)
 				lockText.TextColor3 = Color3.fromRGB(255, 215, 0)
-				lockText.TextSize = 16
-				lockText.Size = UDim2.new(1, 0, 0, 30)
-				lockText.Position = UDim2.fromScale(0, 0.58)
+				lockText.TextSize = 14
+				lockText.Size = UDim2.new(1, 0, 0, 20)
+				lockText.Position = UDim2.fromScale(0, 0.6)
 				lockText.BackgroundTransparency = 1
 				lockText.Parent = contentContainer
 				
@@ -1653,13 +1652,13 @@ function MacLib:Window(Settings)
 				interactionBtn.Size = UDim2.fromScale(1, 1)
 				interactionBtn.BackgroundTransparency = 1
 				interactionBtn.Text = ""
-				interactionBtn.ZIndex = 101
+				interactionBtn.ZIndex = 1001 
 				interactionBtn.Parent = lockFrame
 				
 				interactionBtn.MouseButton1Click:Connect(function()
 					WindowFunctions:Notify({
 						Title = "👑 Premium Required",
-						Description = "This section is for Premium users only. Please upgrade your key!",
+						Description = "Please upgrade your key to access this section!",
 						Lifetime = 5,
 						Color = Color3.fromRGB(255, 215, 0)
 					})
