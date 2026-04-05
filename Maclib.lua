@@ -110,7 +110,7 @@ function MacLib:Window(Settings)
 		
 		local screenSize = camera.ViewportSize
 		local maxWidth = 870
-		local maxHeight = 400 
+		local maxHeight = 600 
 
 		local responsiveWidth = math.min(maxWidth, screenSize.X * 0.9)
 		local responsiveHeight = math.min(maxHeight, screenSize.Y * 0.7) 
@@ -130,7 +130,7 @@ function MacLib:Window(Settings)
     
 
     local uiConstraint = Instance.new("UISizeConstraint", base)
-    uiConstraint.MaxSize = Vector2.new(870, 650)
+    uiConstraint.MaxSize = Vector2.new(1000, 800)
     uiConstraint.MinSize = Vector2.new(500, 100)
 
     local baseUIScale = Instance.new("UIScale", base)
@@ -141,7 +141,6 @@ function MacLib:Window(Settings)
 		else
 			baseUIScale.Scale = 1
 		end
-		-- Cập nhật lại size khi xoay màn hình
 		base.Size = GetResponsiveSize()
 	end
     UpdateScale()
