@@ -4835,12 +4835,26 @@ function MacLib:Window(Settings)
 
 		notification.Parent = notifications
 
-		local notificationUIStroke = Instance.new("UIStroke")
+	local notificationUIStroke = Instance.new("UIStroke")
 		notificationUIStroke.Name = "NotificationUIStroke"
 		notificationUIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		notificationUIStroke.Thickness = 1.2
+		notificationUIStroke.Transparency = 0.5
 		notificationUIStroke.Color = Color3.fromRGB(255, 255, 255)
-		notificationUIStroke.Transparency = 0.9
 		notificationUIStroke.Parent = notification
+
+		local notifGradient = Instance.new("UIGradient", notificationUIStroke)
+		local mainColor = Settings.Color or Color3.fromRGB(120, 180, 255)
+		notifGradient.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 45)),
+			ColorSequenceKeypoint.new(0.5, mainColor), 
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 40, 45))
+		})
+
+		task.spawn(function()
+			local spinInfo = TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1)
+			TweenService:Create(notifGradient, spinInfo, {Rotation = 360}):Play()
+		end)
 
 		local notificationUICorner = Instance.new("UICorner")
 		notificationUICorner.Name = "NotificationUICorner"
@@ -5219,6 +5233,31 @@ function MacLib:Window(Settings)
 			button.BorderSizePixel = 0
 			button.Size = UDim2.fromScale(1, 0)
 
+		local buttonStroke = Instance.new("UIStroke", button)
+        buttonStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        buttonStroke.Thickness = 1.2
+        buttonStroke.Transparency = 0.8
+        
+        local btnGradient = Instance.new("UIGradient", buttonStroke)
+        local btnColor = v.Color or Color3.fromRGB(255, 255, 255)
+        btnGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 35)),
+            ColorSequenceKeypoint.new(0.5, btnColor),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 35))
+        })
+
+        task.spawn(function()
+            local spinInfo = TweenInfo.new(4, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1)
+            TweenService:Create(btnGradient, spinInfo, {Rotation = 360}):Play()
+        end)
+
+        local function ChangeState(State)
+            local targetTrans = (State == "Hover") and 0.4 or 0.8
+            local targetTextTrans = (State == "Hover") and 0.1 or 0.5
+            Tween(buttonStroke, TweenInfo.new(0.2), {Transparency = targetTrans}):Play()
+            Tween(button, TweenInfo.new(0.2), {TextTransparency = targetTextTrans}):Play()
+        end
+
 			local uIPadding1 = Instance.new("UIPadding")
 			uIPadding1.Name = "UIPadding"
 			uIPadding1.PaddingBottom = UDim.new(0, 9)
@@ -5333,6 +5372,7 @@ function MacLib:Window(Settings)
 		WindowFunctions:SetState(state)
 		WindowFunctions:Notify({
 			Title = Settings.Title,
+			Color = Color3.fromRGB(46, 204, 113),
 			Description = (state and "Maximized " or "Minimized ") .. "the menu. Use " .. tostring(MenuKeybind.Name) .. " to toggle it.",
 			Lifetime = 5
 		})
@@ -5741,12 +5781,14 @@ function MacLib:Demo()
 				Buttons = {
 					{
 						Name = "Confirm",
+						Color = Color3.fromRGB(255, 80, 80), -- Red
 						Callback = function()
 							print("Confirmed!")
 						end,
 					},
 					{
-						Name = "Cancel"
+						Name = "Cancel",
+						Color = Color3.fromRGB(180, 180, 180) -- Gray					
 					}
 				}
 			})
