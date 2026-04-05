@@ -105,15 +105,16 @@ function MacLib:Window(Settings)
 
 	local function GetResponsiveSize()
 		if not camera or not camera.ViewportSize then
-			return UDim2.fromOffset(800, 550) 
+			return UDim2.fromOffset(900, 600) 
 		end
 		
 		local screenSize = camera.ViewportSize
-		local maxWidth = 870
-		local maxHeight = 600 
+		
+		local maxWidth = 900
+		local maxHeight = 650 
 
-		local responsiveWidth = math.min(maxWidth, screenSize.X * 0.9)
-		local responsiveHeight = math.min(maxHeight, screenSize.Y * 0.7) 
+		local responsiveWidth = math.min(maxWidth, screenSize.X * 0.92)
+		local responsiveHeight = math.min(maxHeight, screenSize.Y * 0.8) 
 
 		return UDim2.fromOffset(responsiveWidth, responsiveHeight)
 	end
@@ -127,23 +128,26 @@ function MacLib:Window(Settings)
 	base.BorderSizePixel = 0
 	base.Position = UDim2.fromScale(0.5, 0.5)
 	base.Size = GetResponsiveSize()
-    
 
-    local uiConstraint = Instance.new("UISizeConstraint", base)
-    uiConstraint.MaxSize = Vector2.new(1000, 800)
-    uiConstraint.MinSize = Vector2.new(500, 100)
+	local uiConstraint = Instance.new("UISizeConstraint", base)
+	uiConstraint.MaxSize = Vector2.new(1200, 1000) 
+	uiConstraint.MinSize = Vector2.new(500, 100)
 
-    local baseUIScale = Instance.new("UIScale", base)
+	local baseUIScale = Instance.new("UIScale", base)
 	local function UpdateScale()
 		local viewportSize = camera.ViewportSize
-		if viewportSize.X < 800 then
-			baseUIScale.Scale = math.clamp(viewportSize.X / 900, 0.75, 1)
+		if viewportSize.X < 900 then
+			baseUIScale.Scale = math.clamp(viewportSize.X / 1000, 0.7, 1)
 		else
 			baseUIScale.Scale = 1
 		end
 		base.Size = GetResponsiveSize()
 	end
-    UpdateScale()
+
+	if camera then
+		camera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
+	end
+	UpdateScale()
 
     local baseUICorner = Instance.new("UICorner", base)
     baseUICorner.CornerRadius = UDim.new(0, 12)
