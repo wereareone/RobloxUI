@@ -105,6 +105,9 @@ function MacLib:Window(Settings)
 
 	--// [1] TỰ ĐỘNG TÍNH TOÁN SCALE ĐỂ FIT PC & MOBILE
     local function GetAutoUIScale()
+        if not camera or not camera.ViewportSize then
+            return 1.0 -- Default scale if camera is not available
+        end
         local viewportSize = camera.ViewportSize
         -- Nếu màn hình nhỏ (Mobile), scale sẽ nhỏ lại (ví dụ 0.7), PC giữ 1.0
         return math.clamp(viewportSize.X / 1280, 0.6, 1.1) 
