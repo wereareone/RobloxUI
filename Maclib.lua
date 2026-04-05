@@ -103,6 +103,21 @@ function MacLib:Window(Settings)
 	notificationsUIPadding.PaddingTop = UDim.new(0, 10)
 	notificationsUIPadding.Parent = notifications
 
+	local function GetResponsiveSize()
+		if not camera or not camera.ViewportSize then
+			return UDim2.fromOffset(800, 550) 
+		end
+		
+		local screenSize = camera.ViewportSize
+		local maxWidth = 870
+		local maxHeight = 400 
+
+		local responsiveWidth = math.min(maxWidth, screenSize.X * 0.9)
+		local responsiveHeight = math.min(maxHeight, screenSize.Y * 0.7) 
+
+		return UDim2.fromOffset(responsiveWidth, responsiveHeight)
+	end
+
 	local base = Instance.new("Frame")
 	base.Name = "Base"
 	base.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -111,28 +126,24 @@ function MacLib:Window(Settings)
 	base.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	base.BorderSizePixel = 0
 	base.Position = UDim2.fromScale(0.5, 0.5)
-	base.Size = UDim2.fromOffset(868, 350)
+	base.Size = GetResponsiveSize()
     
 
     local uiConstraint = Instance.new("UISizeConstraint", base)
     uiConstraint.MaxSize = Vector2.new(870, 650)
-    uiConstraint.MinSize = Vector2.new(500, 350)
+    uiConstraint.MinSize = Vector2.new(500, 100)
 
     local baseUIScale = Instance.new("UIScale", base)
-    local function UpdateScale()
-        local viewportSize = camera.ViewportSize
-        -- scale nhỏ lại nếu màn hình quá hẹp (dưới 800px)
-        if viewportSize.X < 800 then
-            baseUIScale.Scale = math.clamp(viewportSize.X / 900, 0.75, 1)
-        else
-            baseUIScale.Scale = 1
-        end
-        base.Size = GetResponsiveSize()
-    end
-
-    if camera then
-        camera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
-    end
+	local function UpdateScale()
+		local viewportSize = camera.ViewportSize
+		if viewportSize.X < 800 then
+			baseUIScale.Scale = math.clamp(viewportSize.X / 900, 0.75, 1)
+		else
+			baseUIScale.Scale = 1
+		end
+		-- Cập nhật lại size khi xoay màn hình
+		base.Size = GetResponsiveSize()
+	end
     UpdateScale()
 
     local baseUICorner = Instance.new("UICorner", base)
