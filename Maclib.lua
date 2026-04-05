@@ -103,23 +103,6 @@ function MacLib:Window(Settings)
 	notificationsUIPadding.PaddingTop = UDim.new(0, 10)
 	notificationsUIPadding.Parent = notifications
 
-	local function GetResponsiveSize()
-		if not camera or not camera.ViewportSize then
-			return UDim2.fromOffset(800, 500)
-		end
-		
-		local screenSize = camera.ViewportSize
-		local maxWidth = 870
-		local maxHeight = 650
-
-		-- Tính toán chiều rộng và cao dựa trên 90% màn hình nếu màn hình quá nhỏ
-		local responsiveWidth = math.min(maxWidth, screenSize.X * 0.9)
-		local responsiveHeight = math.min(maxHeight, screenSize.Y * 0.85) -- Chỉ lấy tối đa 85% chiều cao màn hình
-
-		-- Trả về Scale cho linh hoạt hoặc Offset đã được tính toán lại
-		return UDim2.fromOffset(responsiveWidth, responsiveHeight)
-	end
-
 	local base = Instance.new("Frame")
 	base.Name = "Base"
 	base.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -128,7 +111,7 @@ function MacLib:Window(Settings)
 	base.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	base.BorderSizePixel = 0
 	base.Position = UDim2.fromScale(0.5, 0.5)
-	base.Size = Settings.Size or UDim2.fromOffset(868, 350)
+	base.Size = UDim2.fromOffset(868, 350)
     
 
     local uiConstraint = Instance.new("UISizeConstraint", base)
