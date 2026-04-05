@@ -1244,22 +1244,37 @@ function MacLib:Window(Settings)
 	function WindowFunctions:GlobalSetting(Settings)
 		hasGlobalSetting = true
 		local GlobalSettingFunctions = {}
+		
 		local globalSetting = Instance.new("TextButton")
 		globalSetting.Name = "GlobalSetting"
 		globalSetting.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
 		globalSetting.Text = ""
-		globalSetting.TextColor3 = Color3.fromRGB(0, 0, 0)
-		globalSetting.TextSize = 14
-		globalSetting.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 		globalSetting.BackgroundTransparency = 1
-		globalSetting.BorderColor3 = Color3.fromRGB(0, 0, 0)
-		globalSetting.BorderSizePixel = 0
 		globalSetting.Size = UDim2.fromOffset(200, 30)
+		globalSetting.Parent = globalSettings
 
 		local globalSettingToggleUIPadding = Instance.new("UIPadding")
 		globalSettingToggleUIPadding.Name = "GlobalSettingToggleUIPadding"
 		globalSettingToggleUIPadding.PaddingLeft = UDim.new(0, 15)
 		globalSettingToggleUIPadding.Parent = globalSetting
+
+		local globalSettingToggleUIListLayout = Instance.new("UIListLayout")
+		globalSettingToggleUIListLayout.Padding = UDim.new(0, 10)
+		globalSettingToggleUIListLayout.FillDirection = Enum.FillDirection.Horizontal
+		globalSettingToggleUIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		globalSettingToggleUIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		globalSettingToggleUIListLayout.Parent = globalSetting
+
+		local settingIcon = Instance.new("ImageLabel")
+		settingIcon.Name = "SettingIcon"
+		settingIcon.AnchorPoint = Vector2.new(0, 0.5)
+		settingIcon.BackgroundTransparency = 1
+		settingIcon.Image = Settings.Image or "rbxassetid://113064564506075"
+		settingIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+		settingIcon.ImageTransparency = 1
+		settingIcon.Size = UDim2.fromOffset(0, 16) 
+		settingIcon.LayoutOrder = -1
+		settingIcon.Parent = globalSetting
 
 		local settingName = Instance.new("TextLabel")
 		settingName.Name = "SettingName"
@@ -1269,95 +1284,46 @@ function MacLib:Window(Settings)
 		settingName.TextColor3 = Color3.fromRGB(255, 255, 255)
 		settingName.TextSize = 13
 		settingName.TextTransparency = 0.5
-		settingName.TextTruncate = Enum.TextTruncate.SplitWord
 		settingName.TextXAlignment = Enum.TextXAlignment.Left
-		settingName.TextYAlignment = Enum.TextYAlignment.Top
-		settingName.AnchorPoint = Vector2.new(0, 0.5)
 		settingName.AutomaticSize = Enum.AutomaticSize.Y
-		settingName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 		settingName.BackgroundTransparency = 1
-		settingName.BorderColor3 = Color3.fromRGB(0, 0, 0)
-		settingName.BorderSizePixel = 0
-		settingName.Position = UDim2.fromScale(1.3e-07, 0.5)
-		settingName.Size = UDim2.new(1,-40,0,0)
+		settingName.Size = UDim2.new(1, -40, 0, 0)
 		settingName.Parent = globalSetting
 
-		local globalSettingToggleUIListLayout = Instance.new("UIListLayout")
-		globalSettingToggleUIListLayout.Name = "GlobalSettingToggleUIListLayout"
-		globalSettingToggleUIListLayout.Padding = UDim.new(0, 10)
-		globalSettingToggleUIListLayout.FillDirection = Enum.FillDirection.Horizontal
-		globalSettingToggleUIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		globalSettingToggleUIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-		globalSettingToggleUIListLayout.Parent = globalSetting
-
-		local checkmark = Instance.new("TextLabel")
-		checkmark.Name = "Checkmark"
-		checkmark.FontFace = Font.new(
-			assets.interFont,
-			Enum.FontWeight.Medium,
-			Enum.FontStyle.Normal
-		)
-		checkmark.Text = "✓"
-		checkmark.TextColor3 = Color3.fromRGB(255, 255, 255)
-		checkmark.TextSize = 13
-		checkmark.TextTransparency = 1
-		checkmark.TextXAlignment = Enum.TextXAlignment.Left
-		checkmark.TextYAlignment = Enum.TextYAlignment.Top
-		checkmark.AnchorPoint = Vector2.new(0, 0.5)
-		checkmark.AutomaticSize = Enum.AutomaticSize.Y
-		checkmark.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		checkmark.BackgroundTransparency = 1
-		checkmark.BorderColor3 = Color3.fromRGB(0, 0, 0)
-		checkmark.BorderSizePixel = 0
-		checkmark.LayoutOrder = -1
-		checkmark.Position = UDim2.fromScale(1.3e-07, 0.5)
-		checkmark.Size = UDim2.fromOffset(-10, 0)
-		checkmark.Parent = globalSetting
-
-		globalSetting.Parent = globalSettings
-
+		-- Tween Settings
 		local tweensettings = {
-			duration = 0.2,
+			duration = 0.3,
 			easingStyle = Enum.EasingStyle.Quint,
 			transparencyIn = 0.2,
 			transparencyOut = 0.5,
-			checkSizeIncrease = 12,
-			checkSizeDecrease = -globalSettingToggleUIListLayout.Padding.Offset,
-			waitTime = 1
+			iconSizeIn = 16,
+			iconSizeOut = 0
 		}
 
 		local tweens = {
-			checkIn = Tween(checkmark, TweenInfo.new(tweensettings.duration, tweensettings.easingStyle), {
-				Size = UDim2.new(checkmark.Size.X.Scale, tweensettings.checkSizeIncrease, checkmark.Size.Y.Scale, checkmark.Size.Y.Offset)
+			iconIn = Tween(settingIcon, TweenInfo.new(tweensettings.duration, tweensettings.easingStyle), {
+				Size = UDim2.fromOffset(tweensettings.iconSizeIn, 16),
+				ImageTransparency = 0
 			}),
-			checkOut = Tween(checkmark, TweenInfo.new(tweensettings.duration, tweensettings.easingStyle),{
-				Size = UDim2.new(checkmark.Size.X.Scale, tweensettings.checkSizeDecrease, checkmark.Size.Y.Scale, checkmark.Size.Y.Offset)
+			iconOut = Tween(settingIcon, TweenInfo.new(tweensettings.duration, tweensettings.easingStyle), {
+				Size = UDim2.fromOffset(tweensettings.iconSizeOut, 16),
+				ImageTransparency = 1
 			}),
-			nameIn = Tween(settingName, TweenInfo.new(tweensettings.duration, tweensettings.easingStyle),{
+			nameIn = Tween(settingName, TweenInfo.new(tweensettings.duration, tweensettings.easingStyle), {
 				TextTransparency = tweensettings.transparencyIn
 			}),
-			nameOut = Tween(settingName, TweenInfo.new(tweensettings.duration, tweensettings.easingStyle),{
+			nameOut = Tween(settingName, TweenInfo.new(tweensettings.duration, tweensettings.easingStyle), {
 				TextTransparency = tweensettings.transparencyOut
 			})
 		}
 
 		local function Toggle(State)
 			if not State then
-				tweens.checkOut:Play()
+				tweens.iconOut:Play()
 				tweens.nameOut:Play()
-				checkmark:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-					if checkmark.AbsoluteSize.X <= 0 then
-						checkmark.TextTransparency = 1
-					end
-				end)
 			else
-				tweens.checkIn:Play()
+				tweens.iconIn:Play()
 				tweens.nameIn:Play()
-				checkmark:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-					if checkmark.AbsoluteSize.X > 0 then
-						checkmark.TextTransparency = 0
-					end
-				end)
 			end
 		end
 
@@ -1367,12 +1333,9 @@ function MacLib:Window(Settings)
 		globalSetting.MouseButton1Click:Connect(function()
 			toggled = not toggled
 			Toggle(toggled)
-
-			task.spawn(function()
-				if Settings.Callback then
-					Settings.Callback(toggled)
-				end
-			end)
+			if Settings.Callback then
+				task.spawn(Settings.Callback, toggled)
+			end
 		end)
 
 		function GlobalSettingFunctions:UpdateName(NewName)
@@ -1380,8 +1343,8 @@ function MacLib:Window(Settings)
 		end
 
 		function GlobalSettingFunctions:UpdateState(NewState)
-			Toggle(NewState)
 			toggled = NewState
+			Toggle(NewState)
 		end
 
 		return GlobalSettingFunctions
