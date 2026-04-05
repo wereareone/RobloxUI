@@ -103,44 +103,55 @@ function MacLib:Window(Settings)
 	notificationsUIPadding.PaddingTop = UDim.new(0, 10)
 	notificationsUIPadding.Parent = notifications
 
-	--// [1] TỰ ĐỘNG TÍNH TOÁN SCALE ĐỂ FIT PC & MOBILE
-    local function GetAutoUIScale()
+    local function GetResponsiveSize()
         if not camera or not camera.ViewportSize then
-            return 1.0 -- Default scale if camera is not available
+            return UDim2.fromOffset(870, 650)
         end
-        local viewportSize = camera.ViewportSize
-        -- Nếu màn hình nhỏ (Mobile), scale sẽ nhỏ lại (ví dụ 0.7), PC giữ 1.0
-        return math.clamp(viewportSize.X / 1280, 0.6, 1.1) 
+        local screenSize = camera.ViewportSize
+        
+        -- Nếu là Mobile (màn hình nhỏ), UI sẽ chiếm gần hết màn hình
+        if screenSize.X < 1024 then
+            return UDim2.fromScale(0.95, 0.85)
+        end
+        
+        -- Nếu là PC, dùng kích thước tối ưu 
+        return UDim2.fromOffset(870, 650)
     end
 
     local base = Instance.new("Frame")
     base.Name = "Base"
     base.AnchorPoint = Vector2.new(0.5, 0.5)
     base.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    base.BackgroundTransparency = Settings.AcrylicBlur and 0.05 or 0.1 -- Đục hơn xíu cho Apple feel
+    base.BackgroundTransparency = Settings.AcrylicBlur and 0.05 or 0.1
     base.Position = UDim2.fromScale(0.5, 0.5)
-    -- Chỉnh lại Size dùng Scale để luôn nằm trong vùng nhìn thấy
-    base.Size = UDim2.fromScale(0.8, 0.9) 
+    base.Size = GetResponsiveSize() 
     
-    -- Thêm Constraint để không quá to trên PC và không quá nhỏ trên Mobile
+
     local uiConstraint = Instance.new("UISizeConstraint", base)
     uiConstraint.MaxSize = Vector2.new(870, 650)
-    uiConstraint.MinSize = Vector2.new(350, 280)
+    uiConstraint.MinSize = Vector2.new(500, 350)
 
     local baseUIScale = Instance.new("UIScale", base)
-    baseUIScale.Scale = GetAutoUIScale()
-    
-    -- Cập nhật scale khi xoay màn hình (Dành cho Mobile)
-    if camera then
-        camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-            baseUIScale.Scale = GetAutoUIScale()
-        end)
+    local function UpdateScale()
+        local viewportSize = camera.ViewportSize
+        -- scale nhỏ lại nếu màn hình quá hẹp (dưới 800px)
+        if viewportSize.X < 800 then
+            baseUIScale.Scale = math.clamp(viewportSize.X / 900, 0.75, 1)
+        else
+            baseUIScale.Scale = 1
+        end
+        base.Size = GetResponsiveSize()
     end
+
+    if camera then
+        camera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
+    end
+    UpdateScale()
 
     local baseUICorner = Instance.new("UICorner", base)
     baseUICorner.CornerRadius = UDim.new(0, 12)
 
-    --// [2] HIỆU ỨNG VIỀN GLOWING GRADIENT (NHƯ KEY SYSTEM)
+    --// BORDER GLOWING GRADIENT
     local baseUIStroke = Instance.new("UIStroke", base)
     baseUIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     baseUIStroke.Color = Color3.fromRGB(255, 255, 255)
@@ -150,11 +161,10 @@ function MacLib:Window(Settings)
     local borderGradient = Instance.new("UIGradient", baseUIStroke)
     borderGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 45)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(120, 180, 255)), -- Màu tia sáng chạy qua
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(120, 180, 255)),
         ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 40, 45))
     })
 
-    -- Animation chạy viền cực nhẹ (Chạy trên C++ thread, không tốn CPU)
     local function StartBorderAnimation()
         local spinInfo = TweenInfo.new(5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1)
         local pulseInfo = TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
