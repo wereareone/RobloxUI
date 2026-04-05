@@ -1608,53 +1608,63 @@ function MacLib:Window(Settings)
 			elementsScrolling.Parent = elements1
 
 			local function ApplyPremiumLock(sectionFrame, WindowFunctions)
-				local lockFrame = Instance.new("Frame")
-				lockFrame.Name = "PremiumLockOverlay"
-				lockFrame.Size = UDim2.fromScale(1, 1)
-				lockFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-				lockFrame.BackgroundTransparency = 0.65 
-				lockFrame.ZIndex = 50
-				lockFrame.Active = true -- Chặn click chuột xuống dưới
-				
-				local corner = Instance.new("UICorner")
-				corner.CornerRadius = UDim.new(0, 10)
-				corner.Parent = lockFrame
+			local lockFrame = Instance.new("Frame")
+			lockFrame.Name = "PremiumLockOverlay"
+			lockFrame.Size = UDim2.new(1, 0, 1, 0)
+			lockFrame.Position = UDim2.fromScale(0, 0)
+			lockFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+			lockFrame.BackgroundTransparency = 0.7 
+			lockFrame.ZIndex = 100 
+			lockFrame.Active = true 
+			
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(0, 12) 
+			corner.Parent = lockFrame
 
-				local lockIcon = Instance.new("ImageLabel")
-				lockIcon.Name = "LockIcon"
-				lockIcon.Image = "rbxassetid://108952102602834" -- Icon ổ khóa
-				lockIcon.Size = UDim2.fromOffset(35, 35)
-				lockIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-				lockIcon.Position = UDim2.fromScale(0.5, 0.45)
-				lockIcon.BackgroundTransparency = 1
-				lockIcon.ImageTransparency = 0.2
-				lockIcon.Parent = lockFrame
+			-- Container để căn giữa Icon và Text
+			local centerContent = Instance.new("Frame")
+			centerContent.Size = UDim2.fromScale(1, 1)
+			centerContent.BackgroundTransparency = 1
+			centerContent.Parent = lockFrame
 
-				local lockText = Instance.new("TextLabel")
-				lockText.Text = "PREMIUM FEATURE"
-				lockText.Font = Enum.Font.GothamBold
-				lockText.TextColor3 = Color3.fromRGB(255, 215, 0)
-				lockText.TextSize = 12
-				lockText.Size = UDim2.new(1, 0, 0, 20)
-				lockText.Position = UDim2.fromScale(0, 0.65)
-				lockText.BackgroundTransparency = 1
-				lockText.Parent = lockFrame
-				
-				local interactionBtn = Instance.new("TextButton")
-				interactionBtn.Size = UDim2.fromScale(1, 1)
-				interactionBtn.BackgroundTransparency = 1
-				interactionBtn.Text = ""
-				interactionBtn.Parent = lockFrame
-				interactionBtn.MouseButton1Click:Connect(function()
-					WindowFunctions:Notify({
-						Title = "👑 Premium Required",
-						Description = "Please upgrade your key to unlock this section!",
-						Lifetime = 5
-					})
-				end)
+			local lockIcon = Instance.new("ImageLabel")
+			lockIcon.Name = "LockIcon"
+			lockIcon.Image = assets.globe -- Sử dụng asset globe có sẵn
+			lockIcon.Size = UDim2.fromOffset(40, 40)
+			lockIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+			lockIcon.Position = UDim2.fromScale(0.5, 0.4)
+			lockIcon.BackgroundTransparency = 1
+			lockIcon.ImageColor3 = Color3.fromRGB(255, 215, 0) -- Màu vàng Gold
+			lockIcon.Parent = centerContent
 
-				lockFrame.Parent = sectionFrame
-			end
+			local lockText = Instance.new("TextLabel")
+			lockText.Text = "PREMIUM FEATURE"
+			lockText.FontFace = Font.new(assets.interFont, Enum.FontWeight.Bold)
+			lockText.TextColor3 = Color3.fromRGB(255, 215, 0)
+			lockText.TextSize = 14
+			lockText.Size = UDim2.new(1, 0, 0, 20)
+			lockText.Position = UDim2.fromScale(0, 0.6)
+			lockText.BackgroundTransparency = 1
+			lockText.Parent = centerContent
+			
+			local interactionBtn = Instance.new("TextButton")
+			interactionBtn.Size = UDim2.fromScale(1, 1)
+			interactionBtn.BackgroundTransparency = 1
+			interactionBtn.Text = ""
+			interactionBtn.ZIndex = 101
+			interactionBtn.Parent = lockFrame
+			
+			interactionBtn.MouseButton1Click:Connect(function()
+				WindowFunctions:Notify({
+					Title = "👑 Premium Required",
+					Description = "This feature is locked. Please upgrade your key to access!",
+					Lifetime = 5,
+					Color = Color3.fromRGB(255, 215, 0)
+				})
+			end)
+
+			lockFrame.Parent = sectionFrame
+		end
 
 			function TabFunctions:Section(Settings)
 				local SectionFunctions = {}
