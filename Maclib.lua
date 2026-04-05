@@ -120,13 +120,15 @@ function MacLib:Window(Settings)
 		return UDim2.fromOffset(responsiveWidth, responsiveHeight)
 	end
 
-    local base = Instance.new("Frame")
-    base.Name = "Base"
-    base.AnchorPoint = Vector2.new(0.5, 0.5)
-    base.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    base.BackgroundTransparency = Settings.AcrylicBlur and 0.05 or 0.1
-    base.Position = UDim2.fromScale(0.5, 0.5)
-    base.Size = GetResponsiveSize() 
+	local base = Instance.new("Frame")
+	base.Name = "Base"
+	base.AnchorPoint = Vector2.new(0.5, 0.5)
+	base.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	base.BackgroundTransparency = Settings.AcrylicBlur and 0.05 or 0
+	base.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	base.BorderSizePixel = 0
+	base.Position = UDim2.fromScale(0.5, 0.5)
+	base.Size = Settings.Size or UDim2.fromOffset(868, 350)
     
 
     local uiConstraint = Instance.new("UISizeConstraint", base)
