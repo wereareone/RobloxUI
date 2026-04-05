@@ -120,7 +120,7 @@ function MacLib:Window(Settings)
     base.BackgroundTransparency = Settings.AcrylicBlur and 0.05 or 0.1 -- Đục hơn xíu cho Apple feel
     base.Position = UDim2.fromScale(0.5, 0.5)
     -- Chỉnh lại Size dùng Scale để luôn nằm trong vùng nhìn thấy
-    base.Size = UDim2.fromScale(0.8, 0.7) 
+    base.Size = UDim2.fromScale(0.8, 0.9) 
     
     -- Thêm Constraint để không quá to trên PC và không quá nhỏ trên Mobile
     local uiConstraint = Instance.new("UISizeConstraint", base)
@@ -131,9 +131,11 @@ function MacLib:Window(Settings)
     baseUIScale.Scale = GetAutoUIScale()
     
     -- Cập nhật scale khi xoay màn hình (Dành cho Mobile)
-    camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-        baseUIScale.Scale = GetAutoUIScale()
-    end)
+    if camera then
+        camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+            baseUIScale.Scale = GetAutoUIScale()
+        end)
+    end
 
     local baseUICorner = Instance.new("UICorner", base)
     baseUICorner.CornerRadius = UDim.new(0, 12)
