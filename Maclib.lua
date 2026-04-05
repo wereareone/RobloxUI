@@ -866,25 +866,37 @@ function MacLib:Window(Settings)
 	end
 
 	if not Settings.DragStyle or Settings.DragStyle == 1 then
-		interact.InputBegan:Connect(function(input)
+		topbar.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-				onDragStart(input)
+				dragging_ = true
+				dragStart = input.Position
+				startPos = base.Position
+
+				local connection
+				connection = input.Changed:Connect(function()
+					if input.UserInputState == Enum.UserInputState.End then
+						dragging_ = false
+						if connection then connection:Disconnect() end
+					end
+				end)
 			end
 		end)
 
-		interact.InputChanged:Connect(onDragUpdate)
+		topbar.InputChanged:Connect(onDragUpdate)
+
 
 		UserInputService.InputChanged:Connect(function(input)
 			if input == dragInput and dragging_ then
 				update(input)
 			end
 		end)
-
-		interact.InputEnded:Connect(function(input)
+		
+		topbar.InputEnded:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 				dragging_ = false
 			end
 		end)
+
 	elseif Settings.DragStyle == 2 then
 		base.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
