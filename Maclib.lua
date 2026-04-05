@@ -69,7 +69,7 @@ end
 --// Library Functions
 function MacLib:Window(Settings)
 	local WindowFunctions = {Settings = Settings}
-	local isPremium = Settings.isPremium or false
+	isPremium = Settings.isPremium or false
 	if Settings.AcrylicBlur ~= nil then
 		acrylicBlur = Settings.AcrylicBlur
 	else
@@ -1608,35 +1608,43 @@ function MacLib:Window(Settings)
 			elementsScrolling.Parent = elements1
 
 			local function ApplyPremiumLock(sectionFrame, WindowFunctions)
+				if sectionFrame:FindFirstChild("PremiumLockOverlay") then
+					sectionFrame.PremiumLockOverlay:Destroy()
+				end
+
 				local lockFrame = Instance.new("Frame")
 				lockFrame.Name = "PremiumLockOverlay"
 				
+				-- FIX TOẠ ĐỘ: Bù đắp chính xác cho Padding của MacLib
 				lockFrame.Size = UDim2.new(1, 38, 1, 42) 
-				lockFrame.Position = UDim2.fromOffset(-20, -22)
+				lockFrame.Position = UDim2.fromOffset(-20, -22) 
 				
 				lockFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 				lockFrame.BackgroundTransparency = 0.7 
-				lockFrame.ZIndex = 1000 
-				lockFrame.Active = true 
+				lockFrame.ZIndex = 5000 -- Đặt cực cao để đè lên Slider, Toggle, Dropdown
+				lockFrame.Active = true -- Chặn click xuyên thấu
 				
 				local corner = Instance.new("UICorner")
 				corner.CornerRadius = UDim.new(0, 12) 
 				corner.Parent = lockFrame
 
-				local contentContainer = Instance.new("Frame")
-				contentContainer.Size = UDim2.fromScale(1, 1)
-				contentContainer.BackgroundTransparency = 1
-				contentContainer.Parent = lockFrame
+				-- Container nội dung để căn giữa icon và chữ
+				local content = Instance.new("Frame")
+				content.Size = UDim2.fromScale(1, 1)
+				content.BackgroundTransparency = 1
+				content.ZIndex = 5001
+				content.Parent = lockFrame
 
 				local lockIcon = Instance.new("ImageLabel")
 				lockIcon.Name = "LockIcon"
-				lockIcon.Image = assets.globe
+				lockIcon.Image = assets.globe -- Dùng asset globe của MacLib
 				lockIcon.Size = UDim2.fromOffset(40, 40)
 				lockIcon.AnchorPoint = Vector2.new(0.5, 0.5)
 				lockIcon.Position = UDim2.fromScale(0.5, 0.4)
 				lockIcon.BackgroundTransparency = 1
 				lockIcon.ImageColor3 = Color3.fromRGB(255, 215, 0)
-				lockIcon.Parent = contentContainer
+				lockIcon.ZIndex = 5002
+				lockIcon.Parent = content
 
 				local lockText = Instance.new("TextLabel")
 				lockText.Text = "PREMIUM FEATURE"
@@ -1646,16 +1654,18 @@ function MacLib:Window(Settings)
 				lockText.Size = UDim2.new(1, 0, 0, 20)
 				lockText.Position = UDim2.fromScale(0, 0.6)
 				lockText.BackgroundTransparency = 1
-				lockText.Parent = contentContainer
+				lockText.ZIndex = 5002
+				lockText.Parent = content
 				
-				local interactionBtn = Instance.new("TextButton")
-				interactionBtn.Size = UDim2.fromScale(1, 1)
-				interactionBtn.BackgroundTransparency = 1
-				interactionBtn.Text = ""
-				interactionBtn.ZIndex = 1001 
-				interactionBtn.Parent = lockFrame
+				-- Nút bấm tàng hình để bắt sự kiện click hiện Notification
+				local button = Instance.new("TextButton")
+				button.Size = UDim2.fromScale(1, 1)
+				button.BackgroundTransparency = 1
+				button.Text = ""
+				button.ZIndex = 5005 -- Cao nhất để nhận click
+				button.Parent = lockFrame
 				
-				interactionBtn.MouseButton1Click:Connect(function()
+				button.MouseButton1Click:Connect(function()
 					WindowFunctions:Notify({
 						Title = "👑 Premium Required",
 						Description = "Please upgrade your key to access this section!",
@@ -1669,7 +1679,6 @@ function MacLib:Window(Settings)
 
 			function TabFunctions:Section(Settings)
 				local SectionFunctions = {}
-				local isPremium = Settings.isPremium or false
 				local section = Instance.new("Frame")
 				section.Name = "Section"
 				section.AutomaticSize = Enum.AutomaticSize.Y
@@ -1682,7 +1691,7 @@ function MacLib:Window(Settings)
 				section.ClipsDescendants = true
 				section.Parent = Settings.Side == "Left" and left or right
 				SectionFunctions.Instance = section
-
+				
 				if Settings.Premium and not isPremium then
 					ApplyPremiumLock(section, WindowFunctions)
 				end
