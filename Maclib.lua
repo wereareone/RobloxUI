@@ -151,26 +151,28 @@ function MacLib:Window(Settings)
     local baseUICorner = Instance.new("UICorner", base)
     baseUICorner.CornerRadius = UDim.new(0, 12)
 
-    --// BORDER GLOWING GRADIENT
+	--// BORDER GLOWING GRADIENT
     local baseUIStroke = Instance.new("UIStroke", base)
+    baseUIStroke.Name = "ThemeBorderStroke" 
     baseUIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     baseUIStroke.Color = Color3.fromRGB(255, 255, 255)
-    baseUIStroke.Thickness = 1.5
-    baseUIStroke.Transparency = 0.5
+    baseUIStroke.Thickness = 2 
+    baseUIStroke.Transparency = 0 
 
     local borderGradient = Instance.new("UIGradient", baseUIStroke)
+    borderGradient.Name = "ThemeBorderGradient" 
     borderGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 45)),
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 35)),
         ColorSequenceKeypoint.new(0.5, Color3.fromRGB(120, 180, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 40, 45))
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 35))
     })
 
     local function StartBorderAnimation()
-        local spinInfo = TweenInfo.new(5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1)
+        local spinInfo = TweenInfo.new(4, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1)
         local pulseInfo = TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
         
         TweenService:Create(borderGradient, spinInfo, {Rotation = 360}):Play()
-        TweenService:Create(baseUIStroke, pulseInfo, {Transparency = 0.8}):Play()
+        TweenService:Create(baseUIStroke, pulseInfo, {Transparency = 0.4}):Play()
     end
     StartBorderAnimation()
 
@@ -609,6 +611,7 @@ function MacLib:Window(Settings)
 		Enum.FontWeight.SemiBold,
 		Enum.FontStyle.Normal
 	)
+	username.RichText = true
 	username.Text = "@" .. LocalPlayer.Name
 	username.TextColor3 = Color3.fromRGB(255, 255, 255)
 	username.TextSize = 12
@@ -5417,20 +5420,18 @@ function MacLib:Window(Settings)
 		return acrylicBlur
 	end
 
-	local function _SetUserInfoState(State)
+	local function _SetUserInfoState(State, CustomText)
 		if State then
 			headshot.Image = (isReady and headshotImage) or "rbxassetid://0"
-			username.Text = "@" .. LocalPlayer.Name
 			displayName.Text = LocalPlayer.DisplayName
+			username.Text = CustomText or ("@" .. LocalPlayer.Name)
 		else
 			headshot.Image = assets.userInfoBlurred
-			local nameLength = #LocalPlayer.Name
 			local displayNameLength = #LocalPlayer.DisplayName
-			username.Text = "@" .. string.rep(".", nameLength)
 			displayName.Text = string.rep(".", displayNameLength)
+			username.Text = CustomText or "@........"
 		end
 	end
-
 	local showUserInfo
 	if Settings.ShowUserInfo ~= nil then
 		showUserInfo = Settings.ShowUserInfo
@@ -5440,9 +5441,10 @@ function MacLib:Window(Settings)
 
 	_SetUserInfoState(showUserInfo)
 
-	function WindowFunctions:SetUserInfoState(State)
-		_SetUserInfoState(State)
+	function WindowFunctions:SetUserInfoState(State, CustomText)
+		_SetUserInfoState(State, CustomText)
 	end
+
 	function WindowFunctions:GetUserInfoState(State)
 		return showUserInfo
 	end
