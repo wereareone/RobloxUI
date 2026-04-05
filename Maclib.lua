@@ -103,31 +103,61 @@ function MacLib:Window(Settings)
 	notificationsUIPadding.PaddingTop = UDim.new(0, 10)
 	notificationsUIPadding.Parent = notifications
 
-	local base = Instance.new("Frame")
-	base.Name = "Base"
-	base.AnchorPoint = Vector2.new(0.5, 0.5)
-	base.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-	base.BackgroundTransparency = Settings.AcrylicBlur and 0.05 or 0
-	base.BorderColor3 = Color3.fromRGB(0, 0, 0)
-	base.BorderSizePixel = 0
-	base.Position = UDim2.fromScale(0.5, 0.5)
-	base.Size = Settings.Size or UDim2.fromOffset(868, 650)
+--// [1] TỰ ĐỘNG TÍNH TOÁN SCALE ĐỂ FIT PC & MOBILE
+    local function GetAutoUIScale()
+        local viewportSize = camera.ViewportSize
+        -- Nếu màn hình nhỏ (Mobile), scale sẽ nhỏ lại (ví dụ 0.7), PC giữ 1.0
+        return math.clamp(viewportSize.X / 1280, 0.6, 1.1) 
+    end
 
-	local baseUIScale = Instance.new("UIScale")
-	baseUIScale.Name = "BaseUIScale"
-	baseUIScale.Parent = base
+    local base = Instance.new("Frame")
+    base.Name = "Base"
+    base.AnchorPoint = Vector2.new(0.5, 0.5)
+    base.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    base.BackgroundTransparency = Settings.AcrylicBlur and 0.05 or 0.1 -- Đục hơn xíu cho Apple feel
+    base.Position = UDim2.fromScale(0.5, 0.5)
+    -- Chỉnh lại Size dùng Scale để luôn nằm trong vùng nhìn thấy
+    base.Size = UDim2.fromScale(0.8, 0.7) 
+    
+    -- Thêm Constraint để không quá to trên PC và không quá nhỏ trên Mobile
+    local uiConstraint = Instance.new("UISizeConstraint", base)
+    uiConstraint.MaxSize = Vector2.new(870, 650)
+    uiConstraint.MinSize = Vector2.new(350, 280)
 
-	local baseUICorner = Instance.new("UICorner")
-	baseUICorner.Name = "BaseUICorner"
-	baseUICorner.CornerRadius = UDim.new(0, 10)
-	baseUICorner.Parent = base
+    local baseUIScale = Instance.new("UIScale", base)
+    baseUIScale.Scale = GetAutoUIScale()
+    
+    -- Cập nhật scale khi xoay màn hình (Dành cho Mobile)
+    camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+        baseUIScale.Scale = GetAutoUIScale()
+    end)
 
-	local baseUIStroke = Instance.new("UIStroke")
-	baseUIStroke.Name = "BaseUIStroke"
-	baseUIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	baseUIStroke.Color = Color3.fromRGB(255, 255, 255)
-	baseUIStroke.Transparency = 0.9
-	baseUIStroke.Parent = base
+    local baseUICorner = Instance.new("UICorner", base)
+    baseUICorner.CornerRadius = UDim.new(0, 12)
+
+    --// [2] HIỆU ỨNG VIỀN GLOWING GRADIENT (NHƯ KEY SYSTEM)
+    local baseUIStroke = Instance.new("UIStroke", base)
+    baseUIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    baseUIStroke.Color = Color3.fromRGB(255, 255, 255)
+    baseUIStroke.Thickness = 1.5
+    baseUIStroke.Transparency = 0.5
+
+    local borderGradient = Instance.new("UIGradient", baseUIStroke)
+    borderGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 45)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(120, 180, 255)), -- Màu tia sáng chạy qua
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 40, 45))
+    })
+
+    -- Animation chạy viền cực nhẹ (Chạy trên C++ thread, không tốn CPU)
+    local function StartBorderAnimation()
+        local spinInfo = TweenInfo.new(5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1)
+        local pulseInfo = TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+        
+        TweenService:Create(borderGradient, spinInfo, {Rotation = 360}):Play()
+        TweenService:Create(baseUIStroke, pulseInfo, {Transparency = 0.8}):Play()
+    end
+    StartBorderAnimation()
 
 	local sidebar = Instance.new("Frame")
 	sidebar.Name = "Sidebar"
@@ -5265,12 +5295,17 @@ function MacLib:Window(Settings)
 	local onUnloadCallback
 
 	function WindowFunctions:Unload()
-		if onUnloadCallback then
-			onUnloadCallback()  
-		end
-		macLib:Destroy()
-		unloaded = true
-	end
+        if onUnloadCallback then
+            onUnloadCallback()  
+        end
+        -- Dọn dẹp hiệu ứng trước khi destroy
+        unloaded = true
+        macLib:Destroy()
+        -- Kích hoạt bộ thu gom rác của Lua
+        task.delay(0.1, function()
+            collectgarbage("collect")
+        end)
+    end
 
 	function WindowFunctions.onUnloaded(callback)
 		onUnloadCallback = callback
