@@ -14,7 +14,7 @@ local ContentProvider = MacLib.GetService("ContentProvider")
 local UserInputService = MacLib.GetService("UserInputService")
 local Lighting = MacLib.GetService("Lighting")
 local Players = MacLib.GetService("Players")
-
+local camera = workspace.CurrentCamera
 --// Variables
 local isStudio = RunService:IsStudio()
 local LocalPlayer = Players.LocalPlayer
@@ -103,7 +103,7 @@ function MacLib:Window(Settings)
 	notificationsUIPadding.PaddingTop = UDim.new(0, 10)
 	notificationsUIPadding.Parent = notifications
 
---// [1] TỰ ĐỘNG TÍNH TOÁN SCALE ĐỂ FIT PC & MOBILE
+	--// [1] TỰ ĐỘNG TÍNH TOÁN SCALE ĐỂ FIT PC & MOBILE
     local function GetAutoUIScale()
         local viewportSize = camera.ViewportSize
         -- Nếu màn hình nhỏ (Mobile), scale sẽ nhỏ lại (ví dụ 0.7), PC giữ 1.0
