@@ -66,29 +66,6 @@ local function Tween(instance, tweeninfo, propertytable)
 	return TweenService:Create(instance, tweeninfo, propertytable)
 end
 
-local function ApplyLockOverlay(parentInstance)
-    local lockFrame = Instance.new("Frame")
-    lockFrame.Name = "LockOverlay"
-    lockFrame.Size = UDim2.fromScale(1, 1)
-    lockFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    lockFrame.BackgroundTransparency = 0.7 
-    lockFrame.ZIndex = 10
-    lockFrame.Active = true 
-    
-    local lockIcon = Instance.new("ImageLabel")
-    lockIcon.Name = "LockIcon"
-    lockIcon.Image = "rbxassetid://128953625656358" 
-    lockIcon.Size = UDim2.fromOffset(30, 30)
-    lockIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-    lockIcon.Position = UDim2.fromScale(0.5, 0.5)
-    lockIcon.BackgroundTransparency = 1
-    lockIcon.ImageTransparency = 0.3
-    lockIcon.Parent = lockFrame
-    
-    lockFrame.Parent = parentInstance
-    return lockFrame
-end
-
 --// Library Functions
 function MacLib:Window(Settings)
 	local WindowFunctions = {Settings = Settings}
@@ -98,21 +75,6 @@ function MacLib:Window(Settings)
 	else
 		acrylicBlur = true
 	end
-
-	local function ProtectedCallback(callback)
-    return function(...)
-        if not isPremium then
-            WindowFunctions:Notify({
-                Title = "Premium Required",
-                Description = "Please purchase the Premium version to use this feature!",
-                Color = Color3.fromRGB(255, 165, 0), -- Orange
-                Lifetime = 5
-            })
-            return -- Exit
-        end
-        if callback then callback(...) end
-    end
-end
 
 	local macLib = GetGui()
 
@@ -1645,6 +1607,55 @@ end
 
 			elementsScrolling.Parent = elements1
 
+			local function ApplyPremiumLock(sectionFrame, WindowFunctions)
+				local lockFrame = Instance.new("Frame")
+				lockFrame.Name = "PremiumLockOverlay"
+				lockFrame.Size = UDim2.fromScale(1, 1)
+				lockFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+				lockFrame.BackgroundTransparency = 0.65 
+				lockFrame.ZIndex = 50
+				lockFrame.Active = true -- Chặn click chuột xuống dưới
+				
+				local corner = Instance.new("UICorner")
+				corner.CornerRadius = UDim.new(0, 10)
+				corner.Parent = lockFrame
+
+				local lockIcon = Instance.new("ImageLabel")
+				lockIcon.Name = "LockIcon"
+				lockIcon.Image = "rbxassetid://108952102602834" -- Icon ổ khóa
+				lockIcon.Size = UDim2.fromOffset(35, 35)
+				lockIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+				lockIcon.Position = UDim2.fromScale(0.5, 0.45)
+				lockIcon.BackgroundTransparency = 1
+				lockIcon.ImageTransparency = 0.2
+				lockIcon.Parent = lockFrame
+
+				local lockText = Instance.new("TextLabel")
+				lockText.Text = "PREMIUM FEATURE"
+				lockText.Font = Enum.Font.GothamBold
+				lockText.TextColor3 = Color3.fromRGB(255, 215, 0)
+				lockText.TextSize = 12
+				lockText.Size = UDim2.new(1, 0, 0, 20)
+				lockText.Position = UDim2.fromScale(0, 0.65)
+				lockText.BackgroundTransparency = 1
+				lockText.Parent = lockFrame
+				
+				local interactionBtn = Instance.new("TextButton")
+				interactionBtn.Size = UDim2.fromScale(1, 1)
+				interactionBtn.BackgroundTransparency = 1
+				interactionBtn.Text = ""
+				interactionBtn.Parent = lockFrame
+				interactionBtn.MouseButton1Click:Connect(function()
+					WindowFunctions:Notify({
+						Title = "👑 Premium Required",
+						Description = "Please upgrade your key to unlock this section!",
+						Lifetime = 5
+					})
+				end)
+
+				lockFrame.Parent = sectionFrame
+			end
+
 			function TabFunctions:Section(Settings)
 				local SectionFunctions = {}
 				local section = Instance.new("Frame")
@@ -1658,6 +1669,11 @@ end
 				section.Size = UDim2.fromScale(1, 0)
 				section.ClipsDescendants = true
 				section.Parent = Settings.Side == "Left" and left or right
+				SectionFunctions.Instance = section
+
+				if Settings.Premium and not isPremium then
+					ApplyPremiumLock(section, WindowFunctions)
+				end
 
 				local sectionUICorner = Instance.new("UICorner")
 				sectionUICorner.Name = "SectionUICorner"
