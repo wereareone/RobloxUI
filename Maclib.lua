@@ -105,17 +105,17 @@ function MacLib:Window(Settings)
 
     local function GetResponsiveSize()
         if not camera or not camera.ViewportSize then
-            return UDim2.fromOffset(870, 650)
+            return UDim2.fromOffset(870, 600)
         end
         local screenSize = camera.ViewportSize
         
         -- Nếu là Mobile (màn hình nhỏ), UI sẽ chiếm gần hết màn hình
         if screenSize.X < 1024 then
-            return UDim2.fromScale(0.85, 0.75)
+            return UDim2.fromOffset(870, 550)
         end
         
         -- Nếu là PC, dùng kích thước tối ưu 
-        return UDim2.fromOffset(870, 600)
+        return UDim2.fromOffset(870, 650)
     end
 
     local base = Instance.new("Frame")
