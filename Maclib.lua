@@ -18,7 +18,6 @@ local camera = workspace.CurrentCamera
 --// Variables
 local isStudio = RunService:IsStudio()
 local LocalPlayer = Players.LocalPlayer
-local isPremium = Settings.isPremium or false
 
 local windowState
 local acrylicBlur
@@ -70,6 +69,7 @@ end
 --// Library Functions
 function MacLib:Window(Settings)
 	local WindowFunctions = {Settings = Settings}
+	local isPremium = Settings.isPremium or false
 	if Settings.AcrylicBlur ~= nil then
 		acrylicBlur = Settings.AcrylicBlur
 	else
@@ -1669,6 +1669,7 @@ function MacLib:Window(Settings)
 
 			function TabFunctions:Section(Settings)
 				local SectionFunctions = {}
+				local isPremium = Settings.isPremium or false
 				local section = Instance.new("Frame")
 				section.Name = "Section"
 				section.AutomaticSize = Enum.AutomaticSize.Y
