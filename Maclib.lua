@@ -103,20 +103,22 @@ function MacLib:Window(Settings)
 	notificationsUIPadding.PaddingTop = UDim.new(0, 10)
 	notificationsUIPadding.Parent = notifications
 
-    local function GetResponsiveSize()
-        if not camera or not camera.ViewportSize then
-            return UDim2.fromOffset(870, 600)
-        end
-        local screenSize = camera.ViewportSize
-        
-        -- Nếu là Mobile (màn hình nhỏ), UI sẽ chiếm gần hết màn hình
-        if screenSize.X < 1024 then
-            return UDim2.fromOffset(870, 550)
-        end
-        
-        -- Nếu là PC, dùng kích thước tối ưu 
-        return UDim2.fromOffset(870, 650)
-    end
+	local function GetResponsiveSize()
+		if not camera or not camera.ViewportSize then
+			return UDim2.fromOffset(800, 500)
+		end
+		
+		local screenSize = camera.ViewportSize
+		local maxWidth = 870
+		local maxHeight = 650
+
+		-- Tính toán chiều rộng và cao dựa trên 90% màn hình nếu màn hình quá nhỏ
+		local responsiveWidth = math.min(maxWidth, screenSize.X * 0.9)
+		local responsiveHeight = math.min(maxHeight, screenSize.Y * 0.85) -- Chỉ lấy tối đa 85% chiều cao màn hình
+
+		-- Trả về Scale cho linh hoạt hoặc Offset đã được tính toán lại
+		return UDim2.fromOffset(responsiveWidth, responsiveHeight)
+	end
 
     local base = Instance.new("Frame")
     base.Name = "Base"
