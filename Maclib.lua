@@ -111,11 +111,11 @@ function MacLib:Window(Settings)
         
         -- Nếu là Mobile (màn hình nhỏ), UI sẽ chiếm gần hết màn hình
         if screenSize.X < 1024 then
-            return UDim2.fromScale(0.85, 0.85)
+            return UDim2.fromScale(0.85, 0.75)
         end
         
         -- Nếu là PC, dùng kích thước tối ưu 
-        return UDim2.fromOffset(870, 650)
+        return UDim2.fromOffset(870, 600)
     end
 
     local base = Instance.new("Frame")
@@ -5355,13 +5355,9 @@ function MacLib:Window(Settings)
         if onUnloadCallback then
             onUnloadCallback()  
         end
-        -- Dọn dẹp hiệu ứng trước khi destroy
         unloaded = true
         macLib:Destroy()
-        -- Kích hoạt bộ thu gom rác của Lua
-        task.delay(0.1, function()
-            collectgarbage("collect")
-        end)
+        macLib = nil
     end
 
 	function WindowFunctions.onUnloaded(callback)
