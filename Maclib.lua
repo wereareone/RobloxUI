@@ -111,7 +111,7 @@ function MacLib:Window(Settings)
         
         -- Nếu là Mobile (màn hình nhỏ), UI sẽ chiếm gần hết màn hình
         if screenSize.X < 1024 then
-            return UDim2.fromScale(0.95, 0.85)
+            return UDim2.fromScale(0.85, 0.85)
         end
         
         -- Nếu là PC, dùng kích thước tối ưu 
