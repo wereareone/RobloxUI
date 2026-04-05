@@ -66,14 +66,53 @@ local function Tween(instance, tweeninfo, propertytable)
 	return TweenService:Create(instance, tweeninfo, propertytable)
 end
 
+local function ApplyLockOverlay(parentInstance)
+    local lockFrame = Instance.new("Frame")
+    lockFrame.Name = "LockOverlay"
+    lockFrame.Size = UDim2.fromScale(1, 1)
+    lockFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    lockFrame.BackgroundTransparency = 0.7 
+    lockFrame.ZIndex = 10
+    lockFrame.Active = true 
+    
+    local lockIcon = Instance.new("ImageLabel")
+    lockIcon.Name = "LockIcon"
+    lockIcon.Image = "rbxassetid://128953625656358" 
+    lockIcon.Size = UDim2.fromOffset(30, 30)
+    lockIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+    lockIcon.Position = UDim2.fromScale(0.5, 0.5)
+    lockIcon.BackgroundTransparency = 1
+    lockIcon.ImageTransparency = 0.3
+    lockIcon.Parent = lockFrame
+    
+    lockFrame.Parent = parentInstance
+    return lockFrame
+end
+
 --// Library Functions
 function MacLib:Window(Settings)
 	local WindowFunctions = {Settings = Settings}
+	local isPremium = Settings.isPremium or false
 	if Settings.AcrylicBlur ~= nil then
 		acrylicBlur = Settings.AcrylicBlur
 	else
 		acrylicBlur = true
 	end
+
+	local function ProtectedCallback(callback)
+    return function(...)
+        if not isPremium then
+            WindowFunctions:Notify({
+                Title = "Premium Required",
+                Description = "Please purchase the Premium version to use this feature!",
+                Color = Color3.fromRGB(255, 165, 0), -- Orange
+                Lifetime = 5
+            })
+            return -- Exit
+        end
+        if callback then callback(...) end
+    end
+end
 
 	local macLib = GetGui()
 
