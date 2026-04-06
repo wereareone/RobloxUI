@@ -109,7 +109,7 @@ function MacLib:Window(Settings)
     base.Position = UDim2.new(0.5, 0, 0.5, -100)
     base.Size = UDim2.fromOffset(868, 550)
     base.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    base.BackgroundTransparency = Settings.AcrylicBlur and 0.05 or 0
+    base.BackgroundTransparency = (Settings and Settings.AcrylicBlur) and 0.05 or 0
     base.BorderColor3 = Color3.fromRGB(0, 0, 0)
     base.BorderSizePixel = 0
     base.ClipsDescendants = true
@@ -2072,14 +2072,15 @@ function MacLib:Window(Settings)
 					end)
 
 					local function updateSliderBarSize()
-						local padding = sliderElementsUIListLayout.Padding.Offset
-						local sliderValueWidth = sliderValue.AbsoluteSize.X
-						local sliderNameWidth = sliderName.AbsoluteSize.X
-						local totalWidth = sliderElements.AbsoluteSize.X
+                        local scaleValue = baseUIScale and baseUIScale.Scale or 1
+                        local padding = sliderElementsUIListLayout.Padding.Offset
+                        local sliderValueWidth = sliderValue.AbsoluteSize.X / scaleValue
+                        local sliderNameWidth = sliderName.AbsoluteSize.X / scaleValue
+                        local totalWidth = sliderElements.AbsoluteSize.X / scaleValue
 
-						local newBarWidth = (totalWidth - (padding + sliderValueWidth + sliderNameWidth + 20))
-						sliderBar.Size = UDim2.new(sliderBar.Size.X.Scale, newBarWidth, sliderBar.Size.Y.Scale, sliderBar.Size.Y.Offset)
-					end
+                        local newBarWidth = (totalWidth - (padding + sliderValueWidth + sliderNameWidth + 20))
+                        sliderBar.Size = UDim2.new(sliderBar.Size.X.Scale, newBarWidth, sliderBar.Size.Y.Scale, sliderBar.Size.Y.Offset)
+                    end
 
 					updateSliderBarSize()
 
@@ -2221,8 +2222,9 @@ function MacLib:Window(Settings)
 					InputBox.AutomaticSize = Enum.AutomaticSize.X
 
 					local function checkSize()
-                        local nameWidth = InputName.AbsoluteSize.X
-                        local totalWidth = Input.AbsoluteSize.X
+                        local scaleValue = baseUIScale and baseUIScale.Scale or 1
+                        local nameWidth = InputName.AbsoluteSize.X / scaleValue
+                        local totalWidth = input.AbsoluteSize.X / scaleValue
                         local maxWidth = (totalWidth - nameWidth - 20)
                         
                         Constraint.MaxSize = Vector2.new(maxWidth, 9e9)
