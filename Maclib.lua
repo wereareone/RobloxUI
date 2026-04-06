@@ -5311,48 +5311,51 @@ function MacLib:Window(Settings)
 
 	local MenuKeybind = Settings.Keybind or Enum.KeyCode.RightControl
 
-    local originalHeight = base.Size.Y.Offset
+    local originalHeight = 550 
     local isMinimized = false
 
     local function ToggleMenu()
         isMinimized = not isMinimized
         
         local targetHeight = isMinimized and 63 or originalHeight
-        local targetSize = UDim2.new(base.Size.X.Scale, base.Size.X.Offset, 0, targetHeight)
+        local targetSize = UDim2.new(0, 868, 0, targetHeight)
         
-        local sizeTween = TweenService:Create(base, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+		local sizeTween = TweenService:Create(base, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
             Size = targetSize
         })
         
         if isMinimized then
             sidebar.Visible = false
-            currentTabInstance.Visible = false
-            TweenService:Create(base, TweenInfo.new(0.3), {BackgroundTransparency = 0.1}):Play()
+            if currentTabInstance then currentTabInstance.Visible = false end
+            
+            TweenService:Create(topbar, TweenInfo.new(0.3), {BackgroundTransparency = 0.8}):Play()
         else
-            task.delay(0.1, function()
+            task.delay(0.15, function()
                 sidebar.Visible = true
                 if currentTabInstance then currentTabInstance.Visible = true end
             end)
-            TweenService:Create(base, TweenInfo.new(0.3), {BackgroundTransparency = 0.05}):Play()
+            
+            TweenService:Create(topbar, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
         end
         
         sizeTween:Play()
 
         WindowFunctions:Notify({
             Title = Settings.Title,
-            Description = (isMinimized and "Minimized " or "Maximized ") .. "the menu. Use " .. tostring(MenuKeybind.Name) .. " to toggle.",
-            Lifetime = 3
+            Description = (isMinimized and "Menu Minimized" or "Menu Restored"),
+            Lifetime = 2
         })
     end
 
-	UserInputService.InputEnded:Connect(function(inp, gpe)
-		if gpe then return end
-		if inp.KeyCode == MenuKeybind then
-			ToggleMenu()
-		end
-	end)
+    UserInputService.InputEnded:Connect(function(inp, gpe)
+        if gpe then return end
+        if inp.KeyCode == MenuKeybind then
+            ToggleMenu()
+        end
+    end)
 
-	minimize.MouseButton1Click:Connect(ToggleMenu)
+    minimize.MouseButton1Click:Connect(ToggleMenu)
+
 	exit.MouseButton1Click:Connect(function()
 		WindowFunctions:Dialog({
 			Title = Settings.Title,
