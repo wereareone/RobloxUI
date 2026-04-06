@@ -5318,7 +5318,7 @@ function MacLib:Window(Settings)
     local function ToggleMenu()
         isMinimized = not isMinimized
         
-        local targetHeight = isMinimized and 91 or originalHeight
+        local targetHeight = isMinimized and 65 or originalHeight
         local targetSize = UDim2.new(0, 868, 0, targetHeight)
         
         local sizeTween = TweenService:Create(base, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
