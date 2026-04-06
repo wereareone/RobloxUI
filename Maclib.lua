@@ -106,7 +106,7 @@ function MacLib:Window(Settings)
     local base = Instance.new("Frame")
     base.Name = "Base"
     base.AnchorPoint = Vector2.new(0.5, 0)
-    base.Position = UDim2.new(0.5, 0, 0.5, -275)
+    base.Position = UDim2.new(0.5, 0, 0.5, -180)
     base.Size = UDim2.fromOffset(868, 550)
     
     base.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
