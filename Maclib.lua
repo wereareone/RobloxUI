@@ -112,6 +112,7 @@ function MacLib:Window(Settings)
 	base.BorderSizePixel = 0
 	base.Position = UDim2.fromScale(0.5, 0.5)
 	base.Size = UDim2.fromOffset(868, 550)
+	base.ClipsDescendants = true
 
 	local uiConstraint = Instance.new("UISizeConstraint", base)
 	uiConstraint.MaxSize = Vector2.new(1200, 1000) 
@@ -5317,25 +5318,19 @@ function MacLib:Window(Settings)
     local function ToggleMenu()
         isMinimized = not isMinimized
         
-        local targetHeight = isMinimized and 63 or originalHeight
+        local targetHeight = isMinimized and 91 or originalHeight
         local targetSize = UDim2.new(0, 868, 0, targetHeight)
         
-		local sizeTween = TweenService:Create(base, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        local sizeTween = TweenService:Create(base, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
             Size = targetSize
         })
         
         if isMinimized then
-            sidebar.Visible = false
+            if sidebarGroup then sidebarGroup.Visible = false end
             if currentTabInstance then currentTabInstance.Visible = false end
-            
-            TweenService:Create(topbar, TweenInfo.new(0.3), {BackgroundTransparency = 0.8}):Play()
         else
-            task.delay(0.15, function()
-                sidebar.Visible = true
-                if currentTabInstance then currentTabInstance.Visible = true end
-            end)
-            
-            TweenService:Create(topbar, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
+            if sidebarGroup then sidebarGroup.Visible = true end
+            if currentTabInstance then currentTabInstance.Visible = true end
         end
         
         sizeTween:Play()
