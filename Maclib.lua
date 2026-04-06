@@ -2057,7 +2057,7 @@ function MacLib:Window(Settings)
 						local sliderNameWidth = sliderName.AbsoluteSize.X
 						local totalWidth = sliderElements.AbsoluteSize.X
 
-						local newBarWidth = (totalWidth - (padding + sliderValueWidth + sliderNameWidth + 20)) / baseUIScale.Scale
+						local newBarWidth = (totalWidth - (padding + sliderValueWidth + sliderNameWidth + 20))
 						sliderBar.Size = UDim2.new(sliderBar.Size.X.Scale, newBarWidth, sliderBar.Size.Y.Scale, sliderBar.Size.Y.Offset)
 					end
 
@@ -5416,13 +5416,6 @@ function MacLib:Window(Settings)
 	end
 	function WindowFunctions:GetSize(Size)
 		return base.Size
-	end
-
-	function WindowFunctions:SetScale(Scale)
-		baseUIScale.Scale = Scale
-	end
-	function WindowFunctions:GetScale()
-		return baseUIScale.Scale
 	end
 
 	local ClassParser = {
