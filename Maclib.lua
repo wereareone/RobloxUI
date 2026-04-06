@@ -103,22 +103,6 @@ function MacLib:Window(Settings)
 	notificationsUIPadding.PaddingTop = UDim.new(0, 10)
 	notificationsUIPadding.Parent = notifications
 
-	local function GetResponsiveSize()
-		if not camera or not camera.ViewportSize then
-			return UDim2.fromOffset(900, 600) 
-		end
-		
-		local screenSize = camera.ViewportSize
-		
-		local maxWidth = 900
-		local maxHeight = 650 
-
-		local responsiveWidth = math.min(maxWidth, screenSize.X * 0.92)
-		local responsiveHeight = math.min(maxHeight, screenSize.Y * 0.8) 
-
-		return UDim2.fromOffset(responsiveWidth, responsiveHeight)
-	end
-
 	local base = Instance.new("Frame")
 	base.Name = "Base"
 	base.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -127,27 +111,11 @@ function MacLib:Window(Settings)
 	base.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	base.BorderSizePixel = 0
 	base.Position = UDim2.fromScale(0.5, 0.5)
-	base.Size = GetResponsiveSize()
+	base.Size = UDim2.fromOffset(868, 550)
 
 	local uiConstraint = Instance.new("UISizeConstraint", base)
 	uiConstraint.MaxSize = Vector2.new(1200, 1000) 
 	uiConstraint.MinSize = Vector2.new(500, 100)
-
-	local baseUIScale = Instance.new("UIScale", base)
-	local function UpdateScale()
-		local viewportSize = camera.ViewportSize
-		if viewportSize.X < 900 then
-			baseUIScale.Scale = math.clamp(viewportSize.X / 1000, 0.7, 1)
-		else
-			baseUIScale.Scale = 1
-		end
-		base.Size = GetResponsiveSize()
-	end
-
-	if camera then
-		camera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
-	end
-	UpdateScale()
 
     local baseUICorner = Instance.new("UICorner", base)
     baseUICorner.CornerRadius = UDim.new(0, 12)
@@ -5343,16 +5311,39 @@ function MacLib:Window(Settings)
 
 	local MenuKeybind = Settings.Keybind or Enum.KeyCode.RightControl
 
-	local function ToggleMenu()
-		local state = not WindowFunctions:GetState()
-		WindowFunctions:SetState(state)
-		WindowFunctions:Notify({
-			Title = Settings.Title,
-			Color = Color3.fromRGB(46, 204, 113),
-			Description = (state and "Maximized " or "Minimized ") .. "the menu. Use " .. tostring(MenuKeybind.Name) .. " to toggle it.",
-			Lifetime = 5
-		})
-	end
+    local originalHeight = base.Size.Y.Offset
+    local isMinimized = false
+
+    local function ToggleMenu()
+        isMinimized = not isMinimized
+        
+        local targetHeight = isMinimized and 63 or originalHeight
+        local targetSize = UDim2.new(base.Size.X.Scale, base.Size.X.Offset, 0, targetHeight)
+        
+        local sizeTween = TweenService:Create(base, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+            Size = targetSize
+        })
+        
+        if isMinimized then
+            sidebar.Visible = false
+            currentTabInstance.Visible = false
+            TweenService:Create(base, TweenInfo.new(0.3), {BackgroundTransparency = 0.1}):Play()
+        else
+            task.delay(0.1, function()
+                sidebar.Visible = true
+                if currentTabInstance then currentTabInstance.Visible = true end
+            end)
+            TweenService:Create(base, TweenInfo.new(0.3), {BackgroundTransparency = 0.05}):Play()
+        end
+        
+        sizeTween:Play()
+
+        WindowFunctions:Notify({
+            Title = Settings.Title,
+            Description = (isMinimized and "Minimized " or "Maximized ") .. "the menu. Use " .. tostring(MenuKeybind.Name) .. " to toggle.",
+            Lifetime = 3
+        })
+    end
 
 	UserInputService.InputEnded:Connect(function(inp, gpe)
 		if gpe then return end
