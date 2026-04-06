@@ -2201,12 +2201,12 @@ function MacLib:Window(Settings)
 					InputBox.AutomaticSize = Enum.AutomaticSize.X
 
 					local function checkSize()
-						local nameWidth = InputName.AbsoluteSize.X
-						local totalWidth = Input.AbsoluteSize.X
-
-						local maxWidth = (totalWidth - nameWidth - 20) / baseUIScale.Scale
-						Constraint.MaxSize = Vector2.new(maxWidth, 9e9)
-					end
+                        local nameWidth = InputName.AbsoluteSize.X
+                        local totalWidth = Input.AbsoluteSize.X
+                        local maxWidth = (totalWidth - nameWidth - 20)
+                        
+                        Constraint.MaxSize = Vector2.new(maxWidth, 9e9)
+                    end
 
 					checkSize()
 					InputName:GetPropertyChangedSignal("AbsoluteSize"):Connect(checkSize)
@@ -5326,7 +5326,7 @@ function MacLib:Window(Settings)
         })
         
         if isMinimized then
-            if sidebarGroup then sidebarGroup.Visible = false end
+            if sidebarGroup then sidebarGroup.Visible = 	false end
             if currentTabInstance then currentTabInstance.Visible = false end
         else
             if sidebarGroup then sidebarGroup.Visible = true end
