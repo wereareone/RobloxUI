@@ -1,6 +1,6 @@
 local MacLib = { 
 	Options = {}, 
-	Folder = "Maclib", 
+	Folder = "WereTools", 
 	GetService = function(service)
 		return cloneref and cloneref(game:GetService(service)) or game:GetService(service)
 	end
