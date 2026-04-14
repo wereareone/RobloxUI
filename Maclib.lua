@@ -2625,7 +2625,7 @@ function MacLib:Window(Settings)
 					local function CalculateDropdownSize()
 						local totalHeight = 0
 						local visibleChildrenCount = 0
-						local padding = dropdownFrameUIPadding.PaddingTop.Offset + dropdownFrameUIPadding.PaddingBottom.Offset
+						local padding = 38 + dropdownFrameUIPadding.PaddingTop.Offset + dropdownFrameUIPadding.PaddingBottom.Offset
 
 						for _, v in pairs(dropdownFrame:GetChildren()) do
 							if not v:IsA("UIComponent") and v.Visible then
