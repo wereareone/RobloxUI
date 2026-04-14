@@ -2549,7 +2549,8 @@ function MacLib:Window(Settings)
 					dropdownFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					dropdownFrame.BorderSizePixel = 0
 					dropdownFrame.ClipsDescendants = true
-					dropdownFrame.Size = UDim2.fromScale(1, 1)
+					dropdownFrame.Size = UDim2.new(1, 0, 1, -38)
+					dropdownFrame.Position = UDim2.new(0, 0, 0, 38)
 					dropdownFrame.Visible = false
 					dropdownFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 					dropdownFrame.ScrollBarThickness = 2
@@ -2558,7 +2559,7 @@ function MacLib:Window(Settings)
 
 					local dropdownFrameUIPadding = Instance.new("UIPadding")
 					dropdownFrameUIPadding.Name = "DropdownFrameUIPadding"
-					dropdownFrameUIPadding.PaddingTop = UDim.new(0, 38)
+					dropdownFrameUIPadding.PaddingTop = UDim.new(0, 0)
 					dropdownFrameUIPadding.PaddingBottom = UDim.new(0, 10)
 					dropdownFrameUIPadding.Parent = dropdownFrame
 
