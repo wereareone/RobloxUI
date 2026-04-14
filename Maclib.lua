@@ -2477,6 +2477,7 @@ function MacLib:Window(Settings)
 					dropdown.Size = UDim2.new(1, 0, 0, 38)
 					dropdown.Parent = section
 					dropdown.ClipsDescendants = true
+					dropdown.ZIndex = 1
 
 					local dropdownUIPadding = Instance.new("UIPadding")
 					dropdownUIPadding.Name = "DropdownUIPadding"
@@ -2495,6 +2496,7 @@ function MacLib:Window(Settings)
 					interact.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					interact.BorderSizePixel = 0
 					interact.Size = UDim2.new(1, 0, 0, 38)
+					interact.ZIndex = 3
 					interact.Parent = dropdown
 
 					local dropdownName = Instance.new("TextLabel")
@@ -2549,7 +2551,6 @@ function MacLib:Window(Settings)
 					dropdownFrame.ClipsDescendants = true
 					dropdownFrame.Size = UDim2.fromScale(1, 1)
 					dropdownFrame.Visible = false
-					dropdownFrame.AutomaticSize = Enum.AutomaticSize.Y
 					dropdownFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 					dropdownFrame.ScrollBarThickness = 2
 					dropdownFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
