@@ -2550,7 +2550,6 @@ function MacLib:Window(Settings)
 					dropdownFrame.BorderSizePixel = 0
 					dropdownFrame.ClipsDescendants = true
 					dropdownFrame.Size = UDim2.new(1, 0, 1, -38)
-					dropdownFrame.Position = UDim2.new(0, 0, 0, 38)
 					dropdownFrame.Visible = false
 					dropdownFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 					dropdownFrame.ScrollBarThickness = 2
@@ -2559,7 +2558,7 @@ function MacLib:Window(Settings)
 
 					local dropdownFrameUIPadding = Instance.new("UIPadding")
 					dropdownFrameUIPadding.Name = "DropdownFrameUIPadding"
-					dropdownFrameUIPadding.PaddingTop = UDim.new(0, 0)
+					dropdownFrameUIPadding.PaddingTop = UDim.new(0, 38)
 					dropdownFrameUIPadding.PaddingBottom = UDim.new(0, 10)
 					dropdownFrameUIPadding.Parent = dropdownFrame
 
@@ -2625,7 +2624,7 @@ function MacLib:Window(Settings)
 					local function CalculateDropdownSize()
 						local totalHeight = 0
 						local visibleChildrenCount = 0
-						local padding = 38 + dropdownFrameUIPadding.PaddingTop.Offset + dropdownFrameUIPadding.PaddingBottom.Offset
+						local padding = dropdownFrameUIPadding.PaddingTop.Offset + dropdownFrameUIPadding.PaddingBottom.Offset
 
 						for _, v in pairs(dropdownFrame:GetChildren()) do
 							if not v:IsA("UIComponent") and v.Visible then
