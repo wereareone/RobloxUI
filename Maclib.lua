@@ -2540,7 +2540,7 @@ function MacLib:Window(Settings)
 					dropdownImage.Size = UDim2.fromOffset(14, 14)
 					dropdownImage.Parent = dropdown
 
-					local dropdownFrame = Instance.new("Frame")
+					local dropdownFrame = Instance.new("ScrollingFrame")
 					dropdownFrame.Name = "DropdownFrame"
 					dropdownFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 					dropdownFrame.BackgroundTransparency = 1
@@ -2550,6 +2550,10 @@ function MacLib:Window(Settings)
 					dropdownFrame.Size = UDim2.fromScale(1, 1)
 					dropdownFrame.Visible = false
 					dropdownFrame.AutomaticSize = Enum.AutomaticSize.Y
+					dropdownFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+					dropdownFrame.ScrollBarThickness = 2
+					dropdownFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+					dropdownFrame.ScrollingDirection = Enum.ScrollingDirection.Y
 
 					local dropdownFrameUIPadding = Instance.new("UIPadding")
 					dropdownFrameUIPadding.Name = "DropdownFrameUIPadding"
@@ -2739,8 +2743,14 @@ function MacLib:Window(Settings)
 						if db then return end
 						db = true
 						local defaultDropdownSize = 38
+						local MAX_HEIGHT = 200
 						local isDropdownOpen = not dropped
-						local targetSize = isDropdownOpen and UDim2.new(1, 0, 0, CalculateDropdownSize()) or UDim2.new(1, 0, 0, defaultDropdownSize)
+						local contentHeight = CalculateDropdownSize()
+						local finalHeight = math.min(contentHeight, MAX_HEIGHT)
+
+						local targetSize = isDropdownOpen 
+							and UDim2.new(1, 0, 0, finalHeight)
+							or UDim2.new(1, 0, 0, defaultDropdownSize)
 
 						local dropTween = Tween(dropdown, TweenInfo.new(0.2, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
 							Size = targetSize
