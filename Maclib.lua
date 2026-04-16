@@ -2553,7 +2553,7 @@ function MacLib:Window(Settings)
 					dropdownFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					dropdownFrame.BorderSizePixel = 0
 					dropdownFrame.ClipsDescendants = true
-					dropdownFrame.Position = UDim2.fromOffset(0, 5)
+					dropdownFrame.Position = UDim2.fromOffset(0, 35)
 					dropdownFrame.Size = UDim2.new(1, 0, 1, -43)
 					dropdownFrame.Visible = false
 					dropdownFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
