@@ -2564,7 +2564,7 @@ function MacLib:Window(Settings)
 
 					local dropdownFrameUIPadding = Instance.new("UIPadding")
 					dropdownFrameUIPadding.Name = "DropdownFrameUIPadding"
-					dropdownFrameUIPadding.PaddingTop = UDim.new(0, 38)
+					dropdownFrameUIPadding.PaddingTop = UDim.new(0, 5)
 					dropdownFrameUIPadding.PaddingBottom = UDim.new(0, 10)
 					dropdownFrameUIPadding.Parent = dropdownFrame
 
