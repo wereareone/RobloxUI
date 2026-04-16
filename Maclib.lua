@@ -3,7 +3,9 @@ local MacLib = {
 	Folder = "WereTools", 
 	GetService = function(service)
 		return cloneref and cloneref(game:GetService(service)) or game:GetService(service)
-	end
+	end,
+	CurrentConfigName = "" ,
+	AutoSaveEnabled = false
 }
 
 --// Services
@@ -14,6 +16,8 @@ local ContentProvider = MacLib.GetService("ContentProvider")
 local UserInputService = MacLib.GetService("UserInputService")
 local Lighting = MacLib.GetService("Lighting")
 local Players = MacLib.GetService("Players")
+
+
 local camera = workspace.CurrentCamera
 --// Variables
 local isStudio = RunService:IsStudio()
@@ -4779,6 +4783,20 @@ function MacLib:Window(Settings)
 							Description = string.format("Set %q as autoload", name),
 						})
 					end,
+				})
+
+				configSection:Toggle({
+					Name = "Auto Save Config",
+					Default = true,
+					Callback = function(state)
+						MacLib.AutoSaveEnabled = state
+						if state and MacLib.CurrentConfigName == "" then
+							WindowFunctions:Notify({
+								Title = "Warning",
+								Description = "Please Load or Overwrite a config to start Auto Saving."
+							})
+						end
+					end
 				})
 
 				autoloadLabel = configSection:Label({Text = "Autoload config: None"})
