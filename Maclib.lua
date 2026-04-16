@@ -2553,14 +2553,15 @@ function MacLib:Window(Settings)
 					dropdownFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					dropdownFrame.BorderSizePixel = 0
 					dropdownFrame.ClipsDescendants = true
-					dropdownFrame.Size = UDim2.new(1, 0, 1, -38)
+					dropdownFrame.Position = UDim2.fromOffset(0, 5)
+					dropdownFrame.Size = UDim2.new(1, 0, 1, -43)
 					dropdownFrame.Visible = false
 					dropdownFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 					dropdownFrame.ScrollBarThickness = 2
 					dropdownFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 					dropdownFrame.ScrollingDirection = Enum.ScrollingDirection.Y
 					dropdownFrame.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
-					
+
 					local dropdownFrameUIPadding = Instance.new("UIPadding")
 					dropdownFrameUIPadding.Name = "DropdownFrameUIPadding"
 					dropdownFrameUIPadding.PaddingTop = UDim.new(0, 38)
