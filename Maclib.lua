@@ -4675,7 +4675,13 @@ function MacLib:Window(Settings)
 
 				local inputPath = nil
 				local selectedConfig = nil
-
+				local autoloadLabel
+				
+				local function setActiveConfig(name)
+					MacLib.CurrentConfigName = name
+					activeLabel:UpdateName("Active Config: " .. name)
+				end
+				
 				configSection:Input({
 					Name = "Config Name",
 					Placeholder = "Name",
@@ -4736,6 +4742,7 @@ function MacLib:Window(Settings)
 							return
 						end
 
+						setActiveConfig(name)
 						WindowFunctions:Notify({
 							Title = "Interface",
 							Description = string.format("Loaded config %q", configSelection.Value),
@@ -4755,6 +4762,7 @@ function MacLib:Window(Settings)
 							return
 						end
 
+						setActiveConfig(name)
 						WindowFunctions:Notify({
 							Title = "Interface",
 							Description = string.format("Overwrote config %q", configSelection.Value),
