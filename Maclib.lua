@@ -2559,7 +2559,8 @@ function MacLib:Window(Settings)
 					dropdownFrame.ScrollBarThickness = 2
 					dropdownFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 					dropdownFrame.ScrollingDirection = Enum.ScrollingDirection.Y
-
+					dropdownFrame.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
+					
 					local dropdownFrameUIPadding = Instance.new("UIPadding")
 					dropdownFrameUIPadding.Name = "DropdownFrameUIPadding"
 					dropdownFrameUIPadding.PaddingTop = UDim.new(0, 38)
