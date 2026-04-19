@@ -2064,15 +2064,15 @@ function MacLib:Window(Settings)
 							posXScale = math.clamp((input.Position.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
 						else
 							local value = val
-							posXScale = (value - SliderFunctions.Settings.Minimum) / (SliderFunctions.Settings.Maximum - SliderFunctions.Settings.Minimum)
+							posXScale = (value - SliderFunctions.Settings.Minimum) / (SliderFunctions.Settings.Maximum - Settings.Minimum)
 						end
 
 						local pos = UDim2.new(posXScale, 0, 0.5, 0)
 						sliderHead.Position = pos
 
-						finalValue = posXScale * (SliderFunctions.Settings.Maximum - SliderFunctions.Settings.Minimum) + SliderFunctions.Settings.Minimum
+						finalValue = posXScale * (SliderFunctions.Settings.Maximum - SliderFunctions.Settings.Minimum) + Settings.Minimum
 
-						sliderValue.Text = (SliderFunctions.Settings.Prefix or "") .. ValueDisplayMethod(finalValue, SliderFunctions.Settings.Precision) .. (SliderFunctions.Settings.Suffix or "")
+						sliderValue.Text = (Settings.Prefix or "") .. ValueDisplayMethod(finalValue, SliderFunctions.Settings.Precision) .. (Settings.Suffix or "")
 
 						if not ignorecallback then
 							task.spawn(function()
@@ -2118,9 +2118,7 @@ function MacLib:Window(Settings)
 							local newValue = math.clamp(value, SliderFunctions.Settings.Minimum, SliderFunctions.Settings.Maximum)
 							SetValue(newValue)
 						else
-							sliderValue.Text = (SliderFunctions.Settings.Prefix or "")
-								.. ValueDisplayMethod(finalValue or SliderFunctions.Settings.Default, SliderFunctions.Settings.Precision)
-								.. (SliderFunctions.Settings.Suffix or "")
+							sliderValue.Text = ValueDisplayMethod(sliderValue)
 						end
 
 						if SliderFunctions.Settings.onInputComplete then
@@ -2151,7 +2149,7 @@ function MacLib:Window(Settings)
 					section:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateSliderBarSize)
 
 					function SliderFunctions:UpdateName(Name)
-						sliderName.Text = Name
+						sliderName = Name
 					end
 					function SliderFunctions:SetVisibility(State)
 						slider.Visible = State
@@ -2512,7 +2510,7 @@ function MacLib:Window(Settings)
 					end
 
 					function KeybindFunctions:UpdateName(Name)
-						keybindName.Text = Name
+						keybindName = Name
 					end
 
 					function KeybindFunctions:SetVisibility(State)
@@ -4807,12 +4805,12 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				return UISection
-			end
+					return UISection
+				end
 
 			function TabFunctions:InsertThemeSection(Side)
 				local ThemeSection = TabFunctions:Section({
-					Name = "Appearance Studio",
+					Name = "🎨 Appearance Studio",
 					Side = Side or "Left"
 				})
 
@@ -4834,11 +4832,8 @@ function MacLib:Window(Settings)
 					}
 				}
 
-				-- APPLY THEME
+				-- 🎯 APPLY THEME
 				local function ApplyTheme(data)
-					if not data then
-						return
-					end
 					for k,v in pairs(data) do
 						MacLib:SetThemeColor(k, v)
 					end
@@ -4854,7 +4849,7 @@ function MacLib:Window(Settings)
 
 				ThemeSection:Divider()
 
-				-- LIVE COLOR EDIT
+				-- 🎚️ LIVE COLOR EDIT
 				for key, currentColor in pairs(MacLib.Theme) do
 					ThemeSection:Colorpicker({
 						Name = key,
@@ -4867,40 +4862,26 @@ function MacLib:Window(Settings)
 
 				ThemeSection:Divider()
 
-				-- UI SCALE 
+				-- 🔍 UI SCALE (UX BOOST)
 				ThemeSection:Slider({
 					Name = "UI Scale",
-					Minimum = 70,
-					Maximum = 150,
+					Min = 0.7,
+					Max = 1.5,
 					Default = 1,
-					DisplayMethod = "Percent",
-					Precision = 0,
+					Increment = 0.05,
 					Callback = function(val)
-						WindowFunctions:SetScale(val / 100)
+						MacLib.UIScale = val
+						-- apply scale logic if supported
 					end
 				})
 
-				-- SAVE CUSTOM THEME
+				-- 💾 SAVE CUSTOM THEME
 				ThemeSection:Input({
 					Name = "Save Theme As",
 					Placeholder = "MyTheme...",
 					Callback = function(name)
 						if name ~= "" then
-							if not (writefile and makefolder and isfolder) then
-								WindowFunctions:Notify({
-									Title = "Theme",
-									Description = "Theme save unavailable in this environment."
-								})
-								return
-							end
-
-							local themeFolder = MacLib.Folder .. "/themes"
-							if not isfolder(themeFolder) then
-								makefolder(themeFolder)
-							end
-
-							writefile(
-								themeFolder .. "/" .. name .. ".json",
+							writefile(MacLib.Folder.."/themes/"..name..".json",
 								game:GetService("HttpService"):JSONEncode(MacLib.Theme)
 							)
 							WindowFunctions:Notify({
@@ -4911,7 +4892,7 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				-- LOAD CUSTOM THEME
+				-- 📂 LOAD CUSTOM THEME
 				ThemeSection:Button({
 					Name = "Load Saved Theme",
 					Callback = function()
@@ -4923,7 +4904,7 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				-- RESET
+				-- 🔄 RESET
 				ThemeSection:Button({
 					Name = "Reset Theme",
 					Callback = function()
@@ -4941,19 +4922,10 @@ function MacLib:Window(Settings)
 				})
 
 				local selectedConfig = nil
-				local function hasFileApi(...)
-					local funcs = {...}
-					for _, fn in ipairs(funcs) do
-						if type(fn) ~= "function" then
-							return false
-						end
-					end
-					return true
-				end
 
 				section:Header({Text = "Configs"})
 
-				-- SEARCH
+				-- 🔍 SEARCH
 				local searchText = ""
 				section:Input({
 					Name = "Search Config",
@@ -4963,16 +4935,16 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				-- DROPDOWN
+				-- 📋 DROPDOWN
 				local dropdown = section:Dropdown({
 					Name = "Available Configs",
-					Options = type(MacLib:RefreshConfigList()) == "table" and MacLib:RefreshConfigList() or {},
+					Options = MacLib:RefreshConfigList(),
 					Callback = function(val)
 						selectedConfig = val
 					end
 				})
 
-				-- QUICK LOAD
+				-- ⚡ QUICK LOAD
 				section:Button({
 					Name = "⚡ Quick Load",
 					Callback = function()
@@ -4985,7 +4957,7 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				-- SAVE
+				-- 💾 SAVE
 				section:Input({
 					Name = "Save New Config",
 					Placeholder = "config name...",
@@ -4998,18 +4970,11 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				-- RENAME
+				-- ✏️ RENAME
 				section:Button({
 					Name = "Rename Config",
 					Callback = function()
 						if not selectedConfig then return end
-						if not hasFileApi(isfile, readfile, writefile, delfile) then
-							WindowFunctions:Notify({
-								Title = "Config",
-								Description = "Rename is unavailable in this environment."
-							})
-							return
-						end
 
 						local newName = selectedConfig.."_new"
 						local oldPath = MacLib.Folder.."/settings/"..selectedConfig..".json"
@@ -5022,18 +4987,11 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				-- DELETE
+				-- 🗑️ DELETE
 				section:Button({
 					Name = "Delete",
 					Callback = function()
 						if not selectedConfig then return end
-						if not hasFileApi(delfile) then
-							WindowFunctions:Notify({
-								Title = "Config",
-								Description = "Delete is unavailable in this environment."
-							})
-							return
-						end
 						delfile(MacLib.Folder.."/settings/"..selectedConfig..".json")
 						dropdown:ClearOptions()
 						dropdown:InsertOptions(MacLib:RefreshConfigList())
@@ -5044,7 +5002,7 @@ function MacLib:Window(Settings)
 
 				section:Header({Text = "Automation"})
 
-				-- AUTO SAVE SMART
+				-- 🤖 AUTO SAVE SMART
 				section:Toggle({
 					Name = "Smart Auto Save",
 					Default = false,
@@ -5053,18 +5011,11 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				-- AUTO LOAD
+				-- 🚀 AUTO LOAD
 				section:Button({
 					Name = "Set Auto Load",
 					Callback = function()
 						if selectedConfig then
-							if not hasFileApi(writefile) then
-								WindowFunctions:Notify({
-									Title = "Config",
-									Description = "Autoload is unavailable in this environment."
-								})
-								return
-							end
 							writefile(MacLib.Folder.."/settings/autoload.txt", selectedConfig)
 						end
 					end
@@ -5074,35 +5025,21 @@ function MacLib:Window(Settings)
 
 				section:Header({Text = "Advanced"})
 
-				-- EXPORT
+				-- 📤 EXPORT
 				section:Button({
 					Name = "Export Config",
 					Callback = function()
 						if selectedConfig then
-							if not hasFileApi(readfile, setclipboard) then
-								WindowFunctions:Notify({
-									Title = "Config",
-									Description = "Export is unavailable in this environment."
-								})
-								return
-							end
 							setclipboard(readfile(MacLib.Folder.."/settings/"..selectedConfig..".json"))
 						end
 					end
 				})
 
-				-- IMPORT
+				-- 📥 IMPORT
 				section:Input({
 					Name = "Import (Paste JSON)",
 					Placeholder = "paste here...",
 					Callback = function(json)
-						if not hasFileApi(writefile) then
-							WindowFunctions:Notify({
-								Title = "Config",
-								Description = "Import is unavailable in this environment."
-							})
-							return
-						end
 						local name = "imported_"..tostring(os.time())
 						writefile(MacLib.Folder.."/settings/"..name..".json", json)
 					end
@@ -5110,8 +5047,7 @@ function MacLib:Window(Settings)
 
 				return section
 			end
-		end
-	end
+
 	function WindowFunctions:Notify(Settings)
 		local NotificationFunctions = {}
 
