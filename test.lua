@@ -4724,13 +4724,15 @@ function MacLib:Window(Settings)
 				SelectCurrentTab()
 			end
 
-			function TabFunctions:InsertUISettingsSection(Side)
+function TabFunctions:InsertUISettingsSection(Side)
 				local UISection = TabFunctions:Section({ 
 					Name = "Advanced Settings", 
 					Side = Side or "Right" 
 				})
 
-				-- Toggle UI Keybind
+				-- --- [ GROUP 1: MENU CONTROLS ] ---
+				UISection:Header({ Text = "Menu Controls" })
+
 				UISection:Keybind({
 					Name = "Toggle Menu Key",
 					Default = Enum.KeyCode.RightControl,
@@ -4743,9 +4745,23 @@ function MacLib:Window(Settings)
 					end
 				})
 
+				UISection:Slider({
+					Name = "Interface Scale",
+					Default = WindowFunctions:GetScale() * 100,
+					Minimum = 50,
+					Maximum = 150,
+					DisplayMethod = "Percent",
+					Precision = 0,
+					Callback = function(Value)
+						WindowFunctions:SetScale(Value / 100)
+					end
+				})
+
 				UISection:Divider()
 
-				-- Acrylic Blur Toggle
+				-- --- [ GROUP 2: VISUAL EFFECTS ] ---
+				UISection:Header({ Text = "Visual Effects" })
+
 				UISection:Toggle({
 					Name = "Acrylic Blur Effect",
 					Default = WindowFunctions:GetAcrylicBlurState(),
@@ -4754,7 +4770,14 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				-- Notifications Toggle
+				UISection:Toggle({
+					Name = "Display User Info",
+					Default = WindowFunctions:GetUserInfoState(),
+					Callback = function(State)
+						WindowFunctions:SetUserInfoState(State)
+					end
+				})
+				
 				UISection:Toggle({
 					Name = "Enable Notifications",
 					Default = WindowFunctions:GetNotificationsState(),
@@ -4763,507 +4786,175 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				-- Global UI Scale
-				UISection:Slider({
-					Name = "Interface Scale",
-					Default = WindowFunctions:GetScale() * 100,
-					Minimum = 50,
-					Maximum = 150,
-					DisplayMethod = "Percent",
-					Callback = function(Value)
-						WindowFunctions:SetScale(Value / 100)
+				UISection:Divider()
+
+				-- --- [ GROUP 3: UTILITIES ] ---
+				UISection:Header({ Text = "System Utilities" })
+
+				UISection:Button({
+					Name = "Reset UI Position",
+					Callback = function()
+						if base then
+							-- Đưa UI về lại chính giữa màn hình
+							base.Position = UDim2.new(0.5, 0, 0.5, -100)
+							WindowFunctions:Notify({
+								Title = "Utilities",
+								Description = "Interface position has been reset."
+							})
+						end
+					end
+				})
+
+				UISection:Button({
+					Name = "Copy Server Job ID",
+					Callback = function()
+						if setclipboard then
+							setclipboard(game.JobId)
+							WindowFunctions:Notify({ Title = "Utilities", Description = "Job ID copied to clipboard!" })
+						else
+							WindowFunctions:Notify({ Title = "Error", Description = "Your executor does not support setclipboard." })
+						end
+					end
+				})
+
+				UISection:Button({
+					Name = "Rejoin Server",
+					Callback = function()
+						WindowFunctions:Notify({ Title = "Utilities", Description = "Rejoining server..." })
+						task.wait(0.5)
+						game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game.Players.LocalPlayer)
+					end
+				})
+
+				UISection:Divider()
+
+				-- --- [ GROUP 4: DANGER ZONE ] ---
+				UISection:Header({ Text = "Danger Zone" })
+
+				UISection:Button({
+					Name = "Unload Interface",
+					Callback = function()
+						WindowFunctions:Dialog({
+							Title = "Unload UI",
+							Description = "Are you sure you want to unload the UI completely?",
+							Buttons = {
+								{
+									Name = "Confirm",
+									Color = Color3.fromRGB(250, 93, 86),
+									Callback = function()
+										WindowFunctions:Unload()
+									end
+								},
+								{ Name = "Cancel" }
+							}
+						})
 					end
 				})
 
 				return UISection
 			end
-
-			function TabFunctions:InsertSettingsSection(Side)
-
-				-- ── Helper nội bộ ─────────────────────────────────────────
-				local function Notify(title, desc)
-					WindowFunctions:Notify({ Title = title, Description = desc })
-				end
-
-				local function IsBlank(s)
-					return not s or string.gsub(s, "%s", "") == ""
-				end
-
-				-- ════════════════════════════════════════════════════════════
-				--  SECTION 1: THEME
-				-- ════════════════════════════════════════════════════════════
-				local ThemeSection = TabFunctions:Section({
-					Name = "Theme",
-					Side  = Side or "Left",
-				})
-
-				-- ── 1A. Quick Presets ────────────────────────────────────
-				ThemeSection:Header({ Text = "Quick Presets" })
-
-				local ThemePresets = {
-					["Default (Dark)"] = {
-						BackgroundColor = Color3.fromRGB(15, 15, 15),
-						AccentColor     = Color3.fromRGB(120, 180, 255),
-						TextColor       = Color3.fromRGB(255, 255, 255),
-						SectionColor    = Color3.fromRGB(0,   0,   0),
-						ElementColor    = Color3.fromRGB(87,  86,  86),
-					},
-					["Blood"] = {
-						BackgroundColor = Color3.fromRGB(15, 5, 5),
-						AccentColor     = Color3.fromRGB(255, 50, 50),
-						TextColor       = Color3.fromRGB(255, 200, 200),
-						SectionColor    = Color3.fromRGB(8,   0,   0),
-						ElementColor    = Color3.fromRGB(120, 60, 60),
-					},
-					["Mint"] = {
-						BackgroundColor = Color3.fromRGB(15, 20, 15),
-						AccentColor     = Color3.fromRGB(50, 255, 150),
-						TextColor       = Color3.fromRGB(200, 255, 200),
-						SectionColor    = Color3.fromRGB(0,   8,   4),
-						ElementColor    = Color3.fromRGB(60, 120, 80),
-					},
-					["Twilight"] = {
-						BackgroundColor = Color3.fromRGB(10, 10, 26),
-						AccentColor     = Color3.fromRGB(180, 130, 255),
-						TextColor       = Color3.fromRGB(230, 220, 255),
-						SectionColor    = Color3.fromRGB(5,   5,  18),
-						ElementColor    = Color3.fromRGB(90,  70, 130),
-					},
-					["Amber"] = {
-						BackgroundColor = Color3.fromRGB(18, 14, 8),
-						AccentColor     = Color3.fromRGB(255, 190, 50),
-						TextColor       = Color3.fromRGB(255, 240, 200),
-						SectionColor    = Color3.fromRGB(10,  8,   0),
-						ElementColor    = Color3.fromRGB(130, 100, 40),
-					},
-				}
-
-				local presetNames = {
-					"Default (Dark)", "Blood", "Mint", "Twilight", "Amber"
-				}
-
-				ThemeSection:Dropdown({
-					Name    = "Choose Preset",
-					Options = presetNames,
-					Callback = function(selected)
-						local data = ThemePresets[selected]
-						if not data then return end
-						for key, color in pairs(data) do
-							MacLib:SetThemeColor(key, color)
-						end
-						Notify("Theme", "Applied: " .. selected)
-					end,
-				})
-
-				ThemeSection:Divider()
-
-				-- ── 1B. Color Customization ──────────────────────────────
-				ThemeSection:Header({ Text = "Color Customization" })
-
-				-- Format "BackgroundColor" → "Background Color"
-				local function FormatKey(str)
-					return str:gsub("(%u)", " %1"):gsub("^%s+", "")
-				end
-
-				-- Sort keys alphabetically so order is consistent
-				local sortedKeys = {}
-				for key in pairs(MacLib.Theme) do
-					table.insert(sortedKeys, key)
-				end
-				table.sort(sortedKeys)
-
-				for _, key in ipairs(sortedKeys) do
-					local currentColor = MacLib.Theme[key]
-					ThemeSection:Colorpicker({
-						Name     = FormatKey(key),
-						Default  = currentColor,
-						Callback = function(newColor)
-							MacLib:SetThemeColor(key, newColor)
-						end,
-					})
-				end
-
-				ThemeSection:Divider()
-
-				-- ── 1C. Reset ────────────────────────────────────────────
-				ThemeSection:Button({
-					Name = "Reset to Default (Dark)",
-					Callback = function()
-						local data = ThemePresets["Default (Dark)"]
-						for key, color in pairs(data) do
-							MacLib:SetThemeColor(key, color)
-						end
-						Notify("Theme", "Reset to Default (Dark).")
-					end,
-				})
-
-				-- ════════════════════════════════════════════════════════════
-				--  SECTION 2: CONFIG
-				-- ════════════════════════════════════════════════════════════
-				local ConfigSection = TabFunctions:Section({
-					Name = "Config",
-					Side  = Side or "Left",
-				})
-
-				-- Guard: Studio environment không có filesystem
-				if isStudio then
-					ConfigSection:Label({ Text = "Config system unavailable in Studio." })
-					return ThemeSection  -- vẫn trả về để caller không bị lỗi
-				end
-
-				-- ── State ────────────────────────────────────────────────
-				local inputPath     = nil
-				local selectedConfig = nil
-
-				-- ── Helpers ──────────────────────────────────────────────
-				local activeLabel = ConfigSection:Label({ Text = "Active Config: None" })
-
-				local function SetActive(name)
-					MacLib.CurrentConfigName = name
-					activeLabel:UpdateName("Active Config: " .. name)
-				end
-
-				local configDropdown  -- forward-declare cho RefreshList
-
-				local function RefreshList()
-					configDropdown:ClearOptions()
-					configDropdown:InsertOptions(MacLib:RefreshConfigList())
-				end
-
-				-- ── 2A. Config Management ────────────────────────────────
-				ConfigSection:Header({ Text = "Config Management" })
-
-				ConfigSection:Input({
-					Name               = "Config Name",
-					Placeholder        = "Enter config name...",
-					AcceptedCharacters = "All",
-					Callback = function(text)
-						inputPath = text
-					end,
-				})
-
-				configDropdown = ConfigSection:Dropdown({
-					Name     = "Select Config",
-					Multi    = false,
-					Required = false,
-					Options  = MacLib:RefreshConfigList(),
-					Callback = function(value)
-						selectedConfig = value
-					end,
-				})
-
-				-- Create
-				ConfigSection:Button({
-					Name = "Create Config",
-					Callback = function()
-						if IsBlank(inputPath) then
-							Notify("Config", "Name cannot be empty.")
-							return
-						end
-						local ok, err = MacLib:SaveConfig(inputPath)
-						if not ok then
-							Notify("Config", "Save failed: " .. tostring(err))
-							return
-						end
-						Notify("Config", string.format("Created: %q", inputPath))
-						RefreshList()
-					end,
-				})
-
-				-- Load
-				ConfigSection:Button({
-					Name = "Load Selected Config",
-					Callback = function()
-						if not selectedConfig then
-							Notify("Config", "Select a config first.")
-							return
-						end
-						local ok, err = MacLib:LoadConfig(selectedConfig)
-						if not ok then
-							Notify("Config", "Load failed: " .. tostring(err))
-							return
-						end
-						SetActive(selectedConfig)
-						Notify("Config", string.format("Loaded: %q", selectedConfig))
-					end,
-				})
-
-				-- Overwrite
-				ConfigSection:Button({
-					Name = "Overwrite Selected Config",
-					Callback = function()
-						if not selectedConfig then
-							Notify("Config", "Select a config first.")
-							return
-						end
-						local ok, err = MacLib:SaveConfig(selectedConfig)
-						if not ok then
-							Notify("Config", "Overwrite failed: " .. tostring(err))
-							return
-						end
-						SetActive(selectedConfig)
-						Notify("Config", string.format("Overwritten: %q", selectedConfig))
-					end,
-				})
-
-				-- Delete
-				ConfigSection:Button({
-					Name = "Delete Selected Config",
-					Callback = function()
-						if not selectedConfig then
-							Notify("Config", "Select a config first.")
-							return
-						end
-						local path = MacLib.Folder .. "/settings/" .. selectedConfig .. ".json"
-						if isfile(path) then
-							delfile(path)
-							Notify("Config", string.format("Deleted: %q", selectedConfig))
-							RefreshList()
-							selectedConfig = nil
-						else
-							Notify("Config", "File not found.")
-						end
-					end,
-				})
-
-				-- Refresh
-				ConfigSection:Button({
-					Name = "Refresh Config List",
-					Callback = function()
-						RefreshList()
-						Notify("Config", "List refreshed.")
-					end,
-				})
-
-				ConfigSection:Divider()
-
-				-- ── 2B. Automation ───────────────────────────────────────
-				ConfigSection:Header({ Text = "Automation" })
-
-				local autoloadLabel = ConfigSection:Label({ Text = "Autoload Config: None" })
-
-				-- Restore autoload label nếu file tồn tại
-				local autoloadPath = MacLib.Folder .. "/settings/autoload.txt"
-				if isfile(autoloadPath) then
-					local name = readfile(autoloadPath)
-					if not IsBlank(name) then
-						autoloadLabel:UpdateName("Autoload Config: " .. name)
-					end
-				end
-
-				ConfigSection:Button({
-					Name = "Set Selected as Autoload",
-					Callback = function()
-						if not selectedConfig then
-							Notify("Automation", "Select a config first.")
-							return
-						end
-						writefile(autoloadPath, selectedConfig)
-						autoloadLabel:UpdateName("Autoload Config: " .. selectedConfig)
-						Notify("Automation", string.format("Autoload set to %q.", selectedConfig))
-					end,
-				})
-
-				ConfigSection:Button({
-					Name = "Clear Autoload",
-					Callback = function()
-						if isfile(autoloadPath) then
-							delfile(autoloadPath)
-							autoloadLabel:UpdateName("Autoload Config: None")
-							Notify("Automation", "Autoload cleared.")
-						else
-							Notify("Automation", "No autoload file found.")
-						end
-					end,
-				})
-
-				ConfigSection:Toggle({
-					Name    = "Auto-Save Configuration",
-					Default = MacLib.AutoSaveEnabled,
-					Callback = function(state)
-						MacLib.AutoSaveEnabled = state
-						if state and IsBlank(MacLib.CurrentConfigName) then
-							Notify("Automation", "Load or overwrite a config to enable auto-save.")
-						end
-					end,
-				})
-
-				ConfigSection:Divider()
-
-				-- ── 2C. Built-in Presets ─────────────────────────────────
-				ConfigSection:Header({ Text = "Built-in Presets" })
-
-				local BuiltinPresets = {
-					{
-						Name = "Legit Farm",
-						Desc = "Subtle, human-like inputs. Low risk, slow gains.",
-						-- Apply = function() end   ← uncomment and fill in your logic
-					},
-					{
-						Name = "Max Performance",
-						Desc = "Optimized for speed and efficiency. High intensity.",
-						-- Apply = function() end
-					},
-					{
-						Name = "Full Features",
-						Desc = "All modules enabled. For power users.",
-						-- Apply = function() end
-					},
-				}
-
-				local builtinNames = {}
-				local builtinDesc  = {}
-				for _, p in ipairs(BuiltinPresets) do
-					table.insert(builtinNames, p.Name)
-					builtinDesc[p.Name] = p.Desc
-				end
-
-				-- Label yang berubah saat dropdown berubah
-				local presetDescLabel = ConfigSection:Label({
-					Text = "Select a preset above to see its description."
-				})
-
-				ConfigSection:Dropdown({
-					Name    = "Load Built-in Preset",
-					Options = builtinNames,
-					Callback = function(selected)
-						presetDescLabel:UpdateName(builtinDesc[selected] or "")
-
-						-- Cari preset và chạy Apply nếu có
-						for _, p in ipairs(BuiltinPresets) do
-							if p.Name == selected and p.Apply then
-								p.Apply()
-							end
-						end
-
-						Notify("Presets", "Applied: " .. selected)
-					end,
-				})
-
-				-- ════════════════════════════════════════════════════════════
-				--  SECTION 3: UI CONTROLS  (dùng WindowFunctions trực tiếp)
-				-- ════════════════════════════════════════════════════════════
-				local UISection = TabFunctions:Section({
-					Name = "UI Controls",
-					Side  = Side or "Left",
-				})
-
-				UISection:Header({ Text = "Menu Controls" })
-
-				UISection:Keybind({
-					Name    = "Toggle Menu Key",
-					Default = Enum.KeyCode.RightControl,
-					Callback = function(key)
-						WindowFunctions:SetKeybind(key)
-						Notify("UI Controls", "Menu key: " .. key.Name)
-					end,
-				})
-
-				UISection:Slider({
-					Name          = "Interface Scale",
-					Default       = math.floor(WindowFunctions:GetScale() * 100),
-					Minimum       = 50,
-					Maximum       = 150,
-					DisplayMethod = "Percent",
-					Precision     = 0,
-					Callback = function(value)
-						WindowFunctions:SetScale(value / 100)
-					end,
-				})
-
-				UISection:Divider()
-				UISection:Header({ Text = "Visual Effects" })
-
-				UISection:Toggle({
-					Name    = "Acrylic Blur",
-					Default = WindowFunctions:GetAcrylicBlurState(),
-					Callback = function(state)
-						WindowFunctions:SetAcrylicBlurState(state)
-					end,
-				})
-
-				UISection:Toggle({
-					Name    = "Show User Info",
-					Default = WindowFunctions:GetUserInfoState(),
-					Callback = function(state)
-						WindowFunctions:SetUserInfoState(state)
-					end,
-				})
-
-				UISection:Toggle({
-					Name    = "Notifications",
-					Default = WindowFunctions:GetNotificationsState(),
-					Callback = function(state)
-						WindowFunctions:SetNotificationsState(state)
-					end,
-				})
-
-				-- Trả về section đầu tiên (Theme) — caller có thể bỏ qua
-				return ThemeSection
-			end
+			
 			function TabFunctions:InsertThemeSection(Side)
 				local ThemeSection = TabFunctions:Section({ 
 					Name = "Theme Customization", 
 					Side = Side or "Left"        
 				})
 
+				-- Danh sách 10 Themes đa dạng
 				local Presets = {
-					["Default (Dark)"] = {
-						BackgroundColor = Color3.fromRGB(15, 15, 15),
-						AccentColor = Color3.fromRGB(120, 180, 255),
-						TextColor = Color3.fromRGB(255, 255, 255)
+					["1. Default (Dark)"] = {
+						BackgroundColor = Color3.fromRGB(15, 15, 15), SectionColor = Color3.fromRGB(0, 0, 0),
+						TextColor = Color3.fromRGB(255, 255, 255), AccentColor = Color3.fromRGB(120, 180, 255),
+						BorderGlowColor = Color3.fromRGB(30, 30, 35), ElementColor = Color3.fromRGB(87, 86, 86)
 					},
-					["Blood Color"] = {
-						BackgroundColor = Color3.fromRGB(15, 5, 5),
-						AccentColor = Color3.fromRGB(255, 50, 50),
-						TextColor = Color3.fromRGB(255, 200, 200)
+					["2. Blood Color"] = {
+						BackgroundColor = Color3.fromRGB(15, 5, 5), SectionColor = Color3.fromRGB(5, 0, 0),
+						TextColor = Color3.fromRGB(255, 200, 200), AccentColor = Color3.fromRGB(255, 50, 50),
+						BorderGlowColor = Color3.fromRGB(50, 10, 10), ElementColor = Color3.fromRGB(100, 30, 30)
 					},
-					["Mint Color"] = {
-						BackgroundColor = Color3.fromRGB(15, 20, 15),
-						AccentColor = Color3.fromRGB(50, 255, 150),
-						TextColor = Color3.fromRGB(200, 255, 200)
+					["3. Mint Color"] = {
+						BackgroundColor = Color3.fromRGB(15, 20, 15), SectionColor = Color3.fromRGB(5, 10, 5),
+						TextColor = Color3.fromRGB(200, 255, 200), AccentColor = Color3.fromRGB(50, 255, 150),
+						BorderGlowColor = Color3.fromRGB(10, 40, 20), ElementColor = Color3.fromRGB(40, 80, 50)
+					},
+					["4. Cyberpunk"] = {
+						BackgroundColor = Color3.fromRGB(20, 10, 35), SectionColor = Color3.fromRGB(10, 5, 20),
+						TextColor = Color3.fromRGB(255, 255, 0), AccentColor = Color3.fromRGB(0, 255, 255),
+						BorderGlowColor = Color3.fromRGB(255, 0, 255), ElementColor = Color3.fromRGB(100, 50, 150)
+					},
+					["5. Sakura Pink"] = {
+						BackgroundColor = Color3.fromRGB(25, 15, 20), SectionColor = Color3.fromRGB(15, 5, 10),
+						TextColor = Color3.fromRGB(255, 220, 230), AccentColor = Color3.fromRGB(255, 105, 180),
+						BorderGlowColor = Color3.fromRGB(150, 50, 100), ElementColor = Color3.fromRGB(200, 100, 150)
+					},
+					["6. Ocean Blue"] = {
+						BackgroundColor = Color3.fromRGB(5, 15, 25), SectionColor = Color3.fromRGB(0, 5, 15),
+						TextColor = Color3.fromRGB(200, 230, 255), AccentColor = Color3.fromRGB(0, 150, 255),
+						BorderGlowColor = Color3.fromRGB(0, 50, 100), ElementColor = Color3.fromRGB(30, 80, 150)
+					},
+					["7. Monokai"] = {
+						BackgroundColor = Color3.fromRGB(39, 40, 34), SectionColor = Color3.fromRGB(30, 31, 28),
+						TextColor = Color3.fromRGB(248, 248, 242), AccentColor = Color3.fromRGB(166, 226, 46),
+						BorderGlowColor = Color3.fromRGB(102, 217, 239), ElementColor = Color3.fromRGB(117, 113, 94)
+					},
+					["8. Dracula"] = {
+						BackgroundColor = Color3.fromRGB(40, 42, 54), SectionColor = Color3.fromRGB(30, 31, 41),
+						TextColor = Color3.fromRGB(248, 248, 242), AccentColor = Color3.fromRGB(189, 147, 249),
+						BorderGlowColor = Color3.fromRGB(98, 114, 164), ElementColor = Color3.fromRGB(68, 71, 90)
+					},
+					["9. Forest Green"] = {
+						BackgroundColor = Color3.fromRGB(10, 20, 10), SectionColor = Color3.fromRGB(5, 10, 5),
+						TextColor = Color3.fromRGB(200, 255, 200), AccentColor = Color3.fromRGB(34, 139, 34),
+						BorderGlowColor = Color3.fromRGB(0, 50, 0), ElementColor = Color3.fromRGB(46, 139, 87)
+					},
+					["10. Gold & Black"] = {
+						BackgroundColor = Color3.fromRGB(15, 15, 15), SectionColor = Color3.fromRGB(5, 5, 5),
+						TextColor = Color3.fromRGB(255, 255, 255), AccentColor = Color3.fromRGB(255, 215, 0),
+						BorderGlowColor = Color3.fromRGB(150, 120, 0), ElementColor = Color3.fromRGB(100, 80, 0)
 					}
 				}
 
+				-- Lấy danh sách tên Preset và sắp xếp
+				local presetNames = {}
+				for name, _ in pairs(Presets) do table.insert(presetNames, name) end
+				table.sort(presetNames)
+
 				local PresetDropdown = ThemeSection:Dropdown({
 					Name = "Choose Preset",
-					Options = {"Default (Dark)", "Blood Color", "Mint Color"}, 
+					Options = presetNames, 
 					
 					Callback = function(Selected)
 						local data = Presets[Selected]
-						
 						if data then
 							for key, color in pairs(data) do
 								MacLib:SetThemeColor(key, color) 
 							end
-							
 							WindowFunctions:Notify({
 								Title = "Interface",
-								Description = "Theme Applied: " .. Selected
+								Description = "Applied: " .. Selected
 							})
 						end
 					end
 				})
 
-					ThemeSection:Divider()
+				ThemeSection:Divider()
 
-					local function FormatName(str)
-						return str:gsub("(%u)", " %1"):gsub("^%s+", "")
-					end
-
-					for key, currentColor in pairs(MacLib.Theme) do
-						ThemeSection:Colorpicker({
-							Name = FormatName(key),  
-							Default = currentColor,   
-
-						Callback = function(newColor)
-								MacLib:SetThemeColor(key, newColor)
-							end
-						})
-					end
-
-					return ThemeSection
+				local function FormatName(str)
+					return str:gsub("(%u)", " %1"):gsub("^%s+", "")
 				end
+
+				for key, currentColor in pairs(MacLib.Theme) do
+					ThemeSection:Colorpicker({
+						Name = FormatName(key),  
+						Default = currentColor,   
+						Callback = function(newColor)
+							MacLib:SetThemeColor(key, newColor)
+						end
+					})
+				end
+
+				return ThemeSection
+			end
 
 			function TabFunctions:InsertConfigSection(Side)
 				local configSection = TabFunctions:Section({ Side = "Left" })
