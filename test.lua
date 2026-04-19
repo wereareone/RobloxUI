@@ -5110,7 +5110,7 @@ function MacLib:Window(Settings)
 
 				return section
 			end
-
+		end
 	function WindowFunctions:Notify(Settings)
 		local NotificationFunctions = {}
 
