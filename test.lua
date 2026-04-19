@@ -4795,7 +4795,6 @@ function TabFunctions:InsertUISettingsSection(Side)
 					Name = "Reset UI Position",
 					Callback = function()
 						if base then
-							-- Đưa UI về lại chính giữa màn hình
 							base.Position = UDim2.new(0.5, 0, 0.5, -100)
 							WindowFunctions:Notify({
 								Title = "Utilities",
@@ -4860,7 +4859,6 @@ function TabFunctions:InsertUISettingsSection(Side)
 					Side = Side or "Left"        
 				})
 
-				-- Danh sách 10 Themes đa dạng
 				local Presets = {
 					["1. Default (Dark)"] = {
 						BackgroundColor = Color3.fromRGB(15, 15, 15), SectionColor = Color3.fromRGB(0, 0, 0),
@@ -4911,10 +4909,34 @@ function TabFunctions:InsertUISettingsSection(Side)
 						BackgroundColor = Color3.fromRGB(15, 15, 15), SectionColor = Color3.fromRGB(5, 5, 5),
 						TextColor = Color3.fromRGB(255, 255, 255), AccentColor = Color3.fromRGB(255, 215, 0),
 						BorderGlowColor = Color3.fromRGB(150, 120, 0), ElementColor = Color3.fromRGB(100, 80, 0)
+					},
+					["11. Slate Modern"] = {
+						BackgroundColor = Color3.fromRGB(12, 14, 18), SectionColor = Color3.fromRGB(18, 21, 26),
+						TextColor = Color3.fromRGB(240, 244, 248), AccentColor = Color3.fromRGB(91, 140, 255),
+						BorderGlowColor = Color3.fromRGB(54, 62, 78), ElementColor = Color3.fromRGB(45, 52, 64)
+					},
+					["12. Glass Neon"] = {
+						BackgroundColor = Color3.fromRGB(10, 12, 16), SectionColor = Color3.fromRGB(17, 20, 28),
+						TextColor = Color3.fromRGB(235, 238, 242), AccentColor = Color3.fromRGB(0, 229, 255),
+						BorderGlowColor = Color3.fromRGB(70, 90, 115), ElementColor = Color3.fromRGB(38, 45, 58)
+					},
+					["13. Soft Titanium"] = {
+						BackgroundColor = Color3.fromRGB(20, 22, 26), SectionColor = Color3.fromRGB(28, 31, 36),
+						TextColor = Color3.fromRGB(245, 246, 247), AccentColor = Color3.fromRGB(124, 196, 255),
+						BorderGlowColor = Color3.fromRGB(58, 66, 78), ElementColor = Color3.fromRGB(54, 60, 68)
+					},
+					["14. Midnight Violet"] = {
+						BackgroundColor = Color3.fromRGB(14, 12, 22), SectionColor = Color3.fromRGB(22, 18, 34),
+						TextColor = Color3.fromRGB(244, 240, 255), AccentColor = Color3.fromRGB(171, 120, 255),
+						BorderGlowColor = Color3.fromRGB(70, 55, 105), ElementColor = Color3.fromRGB(54, 44, 82)
+					},
+					["15. Mono Neon"] = {
+						BackgroundColor = Color3.fromRGB(10, 10, 12), SectionColor = Color3.fromRGB(18, 18, 22),
+						TextColor = Color3.fromRGB(242, 242, 242), AccentColor = Color3.fromRGB(57, 255, 20),
+						BorderGlowColor = Color3.fromRGB(44, 44, 52), ElementColor = Color3.fromRGB(34, 34, 40)
 					}
 				}
 
-				-- Lấy danh sách tên Preset và sắp xếp
 				local presetNames = {}
 				for name, _ in pairs(Presets) do table.insert(presetNames, name) end
 				table.sort(presetNames)
