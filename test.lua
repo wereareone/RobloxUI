@@ -4873,7 +4873,7 @@ function MacLib:Window(Settings)
 				end
 
 			function TabFunctions:InsertConfigSection(Side)
-				local configSection = TabFunctions:Section({ Side = "Left" })
+				local configSection = TabFunctions:Section({ Side = Side or "Left" })
 
 				if isStudio then
 					configSection:Label({Text = "Config system unavailable. (Environment isStudio)"})
@@ -4882,7 +4882,11 @@ function MacLib:Window(Settings)
 
 				local inputPath = nil
 				local selectedConfig = nil
-				local autoloadLabel
+				
+				-- --- [ GROUP 1: CONFIG MANAGEMENT ] ---
+				configSection:Header({ Text = "Config Management" })
+
+				local activeLabel = configSection:Label({ Text = "Active Config: None" })
 				
 				local function setActiveConfig(name)
 					MacLib.CurrentConfigName = name
@@ -4891,7 +4895,7 @@ function MacLib:Window(Settings)
 				
 				configSection:Input({
 					Name = "Config Name",
-					Placeholder = "Name",
+					Placeholder = "Enter config name...",
 					AcceptedCharacters = "All",
 					Callback = function(input)
 						inputPath = input
@@ -4913,7 +4917,7 @@ function MacLib:Window(Settings)
 					Callback = function()
 						if not inputPath or string.gsub(inputPath, " ", "") == "" then
 							WindowFunctions:Notify({
-								Title = "Interface",
+								Title = "Config Manager",
 								Description = "Config name cannot be empty."
 							})
 							return
@@ -4922,14 +4926,14 @@ function MacLib:Window(Settings)
 						local success, returned = MacLib:SaveConfig(inputPath)
 						if not success then
 							WindowFunctions:Notify({
-								Title = "Interface",
-								Description = "Unable to save config, return error: " .. returned
+								Title = "Config Manager",
+								Description = "Unable to save config. Error: " .. returned
 							})
 						end
 
 						WindowFunctions:Notify({
-							Title = "Interface",
-							Description = string.format("Created config %q", inputPath),
+							Title = "Config Manager",
+							Description = string.format("Created new config: %q", inputPath),
 						})
 
 						configSelection:ClearOptions()
@@ -4938,42 +4942,74 @@ function MacLib:Window(Settings)
 				})
 
 				configSection:Button({
-					Name = "Load Config",
+					Name = "Load Selected Config",
 					Callback = function()
-						local success, returned = MacLib:LoadConfig(configSelection.Value)
+						if not selectedConfig then 
+							WindowFunctions:Notify({ Title = "Config Manager", Description = "Please select a config first." })
+							return 
+						end
+
+						local success, returned = MacLib:LoadConfig(selectedConfig)
 						if not success then
 							WindowFunctions:Notify({
-								Title = "Interface",
-								Description = "Unable to load config, return error: " .. returned
+								Title = "Config Manager",
+								Description = "Unable to load config. Error: " .. returned
 							})
 							return
 						end
 
-						setActiveConfig(name)
+						setActiveConfig(selectedConfig)
 						WindowFunctions:Notify({
-							Title = "Interface",
-							Description = string.format("Loaded config %q", configSelection.Value),
+							Title = "Config Manager",
+							Description = string.format("Loaded config: %q", selectedConfig),
 						})
 					end,
 				})
 
 				configSection:Button({
-					Name = "Overwrite Config",
+					Name = "Overwrite Selected Config",
 					Callback = function()
-						local success, returned = MacLib:SaveConfig(configSelection.Value)
+						if not selectedConfig then 
+							WindowFunctions:Notify({ Title = "Config Manager", Description = "Please select a config first." })
+							return 
+						end
+
+						local success, returned = MacLib:SaveConfig(selectedConfig)
 						if not success then
 							WindowFunctions:Notify({
-								Title = "Interface",
-								Description = "Unable to overwrite config, return error: " .. returned
+								Title = "Config Manager",
+								Description = "Unable to overwrite config. Error: " .. returned
 							})
 							return
 						end
 
-						setActiveConfig(name)
+						setActiveConfig(selectedConfig)
 						WindowFunctions:Notify({
-							Title = "Interface",
-							Description = string.format("Overwrote config %q", configSelection.Value),
+							Title = "Config Manager",
+							Description = string.format("Successfully overwrote config: %q", selectedConfig),
 						})
+					end,
+				})
+
+				configSection:Button({
+					Name = "Delete Selected Config",
+					Callback = function()
+						if not selectedConfig then 
+							WindowFunctions:Notify({ Title = "Config Manager", Description = "Please select a config first." })
+							return 
+						end
+
+						local path = MacLib.Folder .. "/settings/" .. selectedConfig .. ".json"
+						if isfile(path) then
+							delfile(path)
+							WindowFunctions:Notify({
+								Title = "Config Manager",
+								Description = string.format("Deleted config: %q", selectedConfig),
+							})
+							configSelection:ClearOptions()
+							configSelection:InsertOptions(MacLib:RefreshConfigList())
+							selectedConfig = nil
+						end
 					end,
 				})
 
@@ -4982,27 +5018,52 @@ function MacLib:Window(Settings)
 					Callback = function()
 						configSelection:ClearOptions()
 						configSelection:InsertOptions(MacLib:RefreshConfigList())
+						WindowFunctions:Notify({ Title = "Config Manager", Description = "Config list refreshed." })
 					end,
 				})
 
-				local autoloadLabel
+				configSection:Divider()
+
+				-- --- [ GROUP 2: AUTOMATION ] ---
+				configSection:Header({ Text = "Automation" })
+
+				local autoloadLabel = configSection:Label({Text = "Autoload Config: None"})
 
 				configSection:Button({
-					Name = "Set as autoload",
+					Name = "Set Current as Autoload",
 					Callback = function()
-						local name = configSelection.Value
-						writefile(MacLib.Folder .. "/settings/autoload.txt", name)
-						autoloadLabel:UpdateName("Autoload config: " .. name)
+						if not selectedConfig then 
+							WindowFunctions:Notify({ Title = "Config Manager", Description = "Please select a config first." })
+							return 
+						end
+
+						writefile(MacLib.Folder .. "/settings/autoload.txt", selectedConfig)
+						autoloadLabel:UpdateName("Autoload Config: " .. selectedConfig)
 						WindowFunctions:Notify({
-							Title = "Interface",
-							Description = string.format("Set %q as autoload", name),
+							Title = "Config Manager",
+							Description = string.format("Set %q to load automatically.", selectedConfig),
 						})
 					end,
 				})
 
+				configSection:Button({
+					Name = "Clear Autoload",
+					Callback = function()
+						local path = MacLib.Folder .. "/settings/autoload.txt"
+						if isfile(path) then
+							delfile(path)
+							autoloadLabel:UpdateName("Autoload Config: None")
+							WindowFunctions:Notify({
+								Title = "Config Manager",
+								Description = "Cleared autoload configuration.",
+							})
+						end
+					end,
+				})
+
 				configSection:Toggle({
-					Name = "Auto Save Config",
-					Default = true,
+					Name = "Auto Save Configuration",
+					Default = MacLib.AutoSaveEnabled,
 					Callback = function(state)
 						MacLib.AutoSaveEnabled = state
 						if state and MacLib.CurrentConfigName == "" then
@@ -5014,26 +5075,29 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				autoloadLabel = configSection:Label({Text = "Autoload config: None"})
-
 				if isfile(MacLib.Folder .. "/settings/autoload.txt") then
 					local name = readfile(MacLib.Folder .. "/settings/autoload.txt")
-					autoloadLabel:UpdateName("Autoload config: " .. name)
+					autoloadLabel:UpdateName("Autoload Config: " .. name)
 				end
+
+				configSection:Divider()
+
+				-- --- [ GROUP 3: BUILT-IN PRESETS ] ---
+				configSection:Header({ Text = "Built-in Presets" })
+				
+				configSection:Dropdown({
+					Name = "Load Default Presets",
+					Options = {"Legit Farm", "Max Performance", "Full Features"}, 
+					Callback = function(presetName)
+						-- Here you can add logic to toggle specific features based on the preset name
+						WindowFunctions:Notify({
+							Title = "Presets Manager",
+							Description = "Applied Preset: " .. presetName
+						})
+					end
+				})
+
 			end
-
-			tabs[tabSwitcher] = {
-				tabContent = elements1,
-				tabStroke = tabSwitcherUIStroke,
-				switcherImage = tabImage,
-				switcherName = tabSwitcherName,
-			}
-
-			return TabFunctions
-		end
-
-		return SectionFunctions
-	end
 
 	function WindowFunctions:Notify(Settings)
 		local NotificationFunctions = {}
