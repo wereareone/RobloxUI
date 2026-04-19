@@ -2698,7 +2698,7 @@ function MacLib:Window(Settings)
 
 						local spacing = dropdownFrameUIListLayout.Padding.Offset * (visibleChildrenCount - 1)
 
-						return totalHeight + spacing + padding
+						return totalHeight + spacing + padding + 40
 					end
 
 					local function findOption()
