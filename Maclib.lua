@@ -5,7 +5,19 @@ local MacLib = {
 		return cloneref and cloneref(game:GetService(service)) or game:GetService(service)
 	end,
 	CurrentConfigName = "" ,
-	AutoSaveEnabled = false
+	AutoSaveEnabled = false,
+	ThemeObjects = {},
+	Theme = {
+		BackgroundColor = Color3.fromRGB(15, 15, 15),     -- Primary Color (Base, Prompts)
+		SectionColor = Color3.fromRGB(0, 0, 0),           -- Background Color (section, dropdown, slider)
+		TextColor = Color3.fromRGB(255, 255, 255),        -- Primary Text (Titles, Header)
+		AccentColor = Color3.fromRGB(120, 180, 255),      -- Glow gradient
+		BorderGlowColor = Color3.fromRGB(30, 30, 35),     -- Border Color
+		ElementColor = Color3.fromRGB(87, 86, 86),        -- Toggle Color
+		DangerColor = Color3.fromRGB(250, 93, 86),        -- Exit
+		WarningColor = Color3.fromRGB(252, 190, 57),      -- Minimize
+		SuccessColor = Color3.fromRGB(119, 174, 94)       -- Maximize
+	}
 }
 
 --// Services
@@ -71,6 +83,46 @@ local function Tween(instance, tweeninfo, propertytable)
 end
 
 --// Library Functions
+function MacLib:SetThemeColor(ThemeKey, NewColor)
+	self.Theme[ThemeKey] = NewColor
+
+	if self.ThemeObjects[ThemeKey] then
+		for _, obj in ipairs(self.ThemeObjects[ThemeKey]) do
+			pcall(function()
+				if obj.Instance.Parent ~= nil then
+					obj.Instance[obj.Property] = NewColor
+				end
+			end)
+		end
+	end
+
+	if ThemeKey == "AccentColor" or ThemeKey == "BorderGlowColor" then
+		if self.ThemeObjects["BorderGradient"] then
+			for _, grad in ipairs(self.ThemeObjects["BorderGradient"]) do
+				pcall(function()
+					grad.Instance.Color = ColorSequence.new({
+						ColorSequenceKeypoint.new(0, self.Theme.BorderGlowColor),
+						ColorSequenceKeypoint.new(0.5, self.Theme.AccentColor),
+						ColorSequenceKeypoint.new(1, self.Theme.BorderGlowColor)
+					})
+				end)
+			end
+		end
+	end
+end
+
+function MacLib:AddThemeObject(Instance, Property, ThemeKey)
+	if not self.ThemeObjects[ThemeKey] then
+		self.ThemeObjects[ThemeKey] = {}
+	end
+	
+	table.insert(self.ThemeObjects[ThemeKey], {Instance = Instance, Property = Property})
+	
+	if self.Theme[ThemeKey] then
+		Instance[Property] = self.Theme[ThemeKey]
+	end
+end
+
 function MacLib:Window(Settings)
 	local WindowFunctions = {Settings = Settings}
 	if Settings.AcrylicBlur ~= nil then
@@ -112,7 +164,7 @@ function MacLib:Window(Settings)
     base.AnchorPoint = Vector2.new(0.5, 0)
     base.Position = UDim2.new(0.5, 0, 0.5, -100)
     base.Size = UDim2.fromOffset(868, 550)
-    base.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    MacLib:AddThemeObject(base, "BackgroundColor3", "BackgroundColor")
     base.BackgroundTransparency = (Settings and Settings.AcrylicBlur) and 0.05 or 0
     base.BorderColor3 = Color3.fromRGB(0, 0, 0)
     base.BorderSizePixel = 0
@@ -159,12 +211,15 @@ function MacLib:Window(Settings)
 
     local borderGradient = Instance.new("UIGradient", baseUIStroke)
     borderGradient.Name = "ThemeBorderGradient" 
-    borderGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 35)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(120, 180, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 35))
+	borderGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, MacLib.Theme.BorderGlowColor),
+        ColorSequenceKeypoint.new(0.5, MacLib.Theme.AccentColor), 
+        ColorSequenceKeypoint.new(1, MacLib.Theme.BorderGlowColor)
     })
 
+	if not MacLib.ThemeObjects["BorderGradient"] then MacLib.ThemeObjects["BorderGradient"] = {} end
+	table.insert(MacLib.ThemeObjects["BorderGradient"], {Instance = borderGradient})
+	
     local function StartBorderAnimation()
         local spinInfo = TweenInfo.new(4, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1)
         local pulseInfo = TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
@@ -260,7 +315,7 @@ function MacLib:Window(Settings)
 	exit.TextColor3 = Color3.fromRGB(0, 0, 0)
 	exit.TextSize = 14
 	exit.AutoButtonColor = false
-	exit.BackgroundColor3 = Color3.fromRGB(250, 93, 86)
+	exit.BackgroundColor3 = MacLib.Theme.DangerColor
 	exit.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	exit.BorderSizePixel = 0
 
@@ -278,7 +333,7 @@ function MacLib:Window(Settings)
 	minimize.TextColor3 = Color3.fromRGB(0, 0, 0)
 	minimize.TextSize = 14
 	minimize.AutoButtonColor = false
-	minimize.BackgroundColor3 = Color3.fromRGB(252, 190, 57)
+	minimize.BackgroundColor3 = MacLib.Theme.WarningColor
 	minimize.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	minimize.BorderSizePixel = 0
 	minimize.LayoutOrder = 1
@@ -297,7 +352,7 @@ function MacLib:Window(Settings)
 	maximize.TextColor3 = Color3.fromRGB(0, 0, 0)
 	maximize.TextSize = 14
 	maximize.AutoButtonColor = false
-	maximize.BackgroundColor3 = Color3.fromRGB(119, 174, 94)
+	maximize.BackgroundColor3 = MacLib.Theme.SuccessColor
 	maximize.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	maximize.BorderSizePixel = 0
 	maximize.LayoutOrder = 1
@@ -441,7 +496,7 @@ function MacLib:Window(Settings)
 		Enum.FontStyle.Normal
 	)
 	title.Text = Settings.Title
-	title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	title.TextColor3 = MacLib.Theme.TextColor
 	title.RichText = true
 	title.TextSize = 18
 	title.TextTransparency = 0.1
@@ -1580,7 +1635,7 @@ function MacLib:Window(Settings)
 				local section = Instance.new("Frame")
 				section.Name = "Section"
 				section.AutomaticSize = Enum.AutomaticSize.Y
-				section.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				MacLib:AddThemeObject(section, "BackgroundColor3", "SectionColor")
 				section.BackgroundTransparency = 0.98
 				section.BorderColor3 = Color3.fromRGB(0, 0, 0)
 				section.BorderSizePixel = 0
@@ -1614,6 +1669,8 @@ function MacLib:Window(Settings)
 				sectionUIPadding.PaddingRight = UDim.new(0, 18)
 				sectionUIPadding.PaddingTop = UDim.new(0, 22)
 				sectionUIPadding.Parent = section
+				
+			
 
 				function SectionFunctions:Button(Settings, Flag)
 					local ButtonFunctions = {Settings = Settings}
@@ -1631,7 +1688,7 @@ function MacLib:Window(Settings)
 					buttonInteract.Name = "ButtonInteract"
 					buttonInteract.FontFace = Font.new(assets.interFont)
 					buttonInteract.RichText = true
-					buttonInteract.TextColor3 = Color3.fromRGB(255, 255, 255)
+					MacLib:AddThemeObject(buttonInteract, "TextColor3", "TextColor")
 					buttonInteract.TextSize = 13
 					buttonInteract.TextTransparency = 0.5
 					buttonInteract.TextTruncate = Enum.TextTruncate.AtEnd
@@ -2641,7 +2698,7 @@ function MacLib:Window(Settings)
 
 						local spacing = dropdownFrameUIListLayout.Padding.Offset * (visibleChildrenCount - 1)
 
-						return totalHeight + spacing + padding
+						return totalHeight + spacing + padding + 40
 					end
 
 					local function findOption()
@@ -2750,7 +2807,7 @@ function MacLib:Window(Settings)
 						if db then return end
 						db = true
 						local defaultDropdownSize = 38
-						local MAX_HEIGHT = 200
+						local MAX_HEIGHT = 350
 						local isDropdownOpen = not dropped
 						local contentHeight = CalculateDropdownSize()
 						local finalHeight = math.min(contentHeight, MAX_HEIGHT)
@@ -4665,6 +4722,260 @@ function MacLib:Window(Settings)
 
 			function TabFunctions:Select()
 				SelectCurrentTab()
+			end
+
+function TabFunctions:InsertUISettingsSection(Side)
+				local UISection = TabFunctions:Section({ 
+					Name = "Advanced Settings", 
+					Side = Side or "Right" 
+				})
+
+				-- --- [ GROUP 1: MENU CONTROLS ] ---
+				UISection:Header({ Text = "Menu Controls" })
+
+				UISection:Keybind({
+					Name = "Toggle Menu Key",
+					Default = Enum.KeyCode.RightControl,
+					Callback = function(Key)
+						WindowFunctions:SetKeybind(Key)
+						WindowFunctions:Notify({
+							Title = "UI Settings",
+							Description = "Menu toggle key changed to: " .. Key.Name
+						})
+					end
+				})
+
+				UISection:Slider({
+					Name = "Interface Scale",
+					Default = WindowFunctions:GetScale() * 100,
+					Minimum = 50,
+					Maximum = 150,
+					DisplayMethod = "Percent",
+					Precision = 0,
+					Callback = function(Value)
+						WindowFunctions:SetScale(Value / 100)
+					end
+				})
+
+				UISection:Divider()
+
+				-- --- [ GROUP 2: VISUAL EFFECTS ] ---
+				UISection:Header({ Text = "Visual Effects" })
+
+				UISection:Toggle({
+					Name = "Acrylic Blur Effect",
+					Default = WindowFunctions:GetAcrylicBlurState(),
+					Callback = function(State)
+						WindowFunctions:SetAcrylicBlurState(State)
+					end
+				})
+
+				UISection:Toggle({
+					Name = "Display User Info",
+					Default = WindowFunctions:GetUserInfoState(),
+					Callback = function(State)
+						WindowFunctions:SetUserInfoState(State)
+					end
+				})
+				
+				UISection:Toggle({
+					Name = "Enable Notifications",
+					Default = WindowFunctions:GetNotificationsState(),
+					Callback = function(State)
+						WindowFunctions:SetNotificationsState(State)
+					end
+				})
+
+				UISection:Divider()
+
+				-- --- [ GROUP 3: UTILITIES ] ---
+				UISection:Header({ Text = "System Utilities" })
+
+				UISection:Button({
+					Name = "Reset UI Position",
+					Callback = function()
+						if base then
+							base.Position = UDim2.new(0.5, 0, 0.5, -100)
+							WindowFunctions:Notify({
+								Title = "Utilities",
+								Description = "Interface position has been reset."
+							})
+						end
+					end
+				})
+
+				UISection:Button({
+					Name = "Copy Server Job ID",
+					Callback = function()
+						if setclipboard then
+							setclipboard(game.JobId)
+							WindowFunctions:Notify({ Title = "Utilities", Description = "Job ID copied to clipboard!" })
+						else
+							WindowFunctions:Notify({ Title = "Error", Description = "Your executor does not support setclipboard." })
+						end
+					end
+				})
+
+				UISection:Button({
+					Name = "Rejoin Server",
+					Callback = function()
+						WindowFunctions:Notify({ Title = "Utilities", Description = "Rejoining server..." })
+						task.wait(0.5)
+						game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game.Players.LocalPlayer)
+					end
+				})
+
+				UISection:Divider()
+
+				-- --- [ GROUP 4: DANGER ZONE ] ---
+				UISection:Header({ Text = "Danger Zone" })
+
+				UISection:Button({
+					Name = "Unload Interface",
+					Callback = function()
+						WindowFunctions:Dialog({
+							Title = "Unload UI",
+							Description = "Are you sure you want to unload the UI completely?",
+							Buttons = {
+								{
+									Name = "Confirm",
+									Color = Color3.fromRGB(250, 93, 86),
+									Callback = function()
+										WindowFunctions:Unload()
+									end
+								},
+								{ Name = "Cancel" }
+							}
+						})
+					end
+				})
+
+				return UISection
+			end
+			
+			function TabFunctions:InsertThemeSection(Side)
+				local ThemeSection = TabFunctions:Section({ 
+					Name = "Theme Customization", 
+					Side = Side or "Left"        
+				})
+
+				local Presets = {
+					["1. Default (Dark)"] = {
+						BackgroundColor = Color3.fromRGB(15, 15, 15), SectionColor = Color3.fromRGB(0, 0, 0),
+						TextColor = Color3.fromRGB(255, 255, 255), AccentColor = Color3.fromRGB(120, 180, 255),
+						BorderGlowColor = Color3.fromRGB(30, 30, 35), ElementColor = Color3.fromRGB(87, 86, 86)
+					},
+					["2. Blood Color"] = {
+						BackgroundColor = Color3.fromRGB(15, 5, 5), SectionColor = Color3.fromRGB(5, 0, 0),
+						TextColor = Color3.fromRGB(255, 200, 200), AccentColor = Color3.fromRGB(255, 50, 50),
+						BorderGlowColor = Color3.fromRGB(50, 10, 10), ElementColor = Color3.fromRGB(100, 30, 30)
+					},
+					["3. Mint Color"] = {
+						BackgroundColor = Color3.fromRGB(15, 20, 15), SectionColor = Color3.fromRGB(5, 10, 5),
+						TextColor = Color3.fromRGB(200, 255, 200), AccentColor = Color3.fromRGB(50, 255, 150),
+						BorderGlowColor = Color3.fromRGB(10, 40, 20), ElementColor = Color3.fromRGB(40, 80, 50)
+					},
+					["4. Cyberpunk"] = {
+						BackgroundColor = Color3.fromRGB(20, 10, 35), SectionColor = Color3.fromRGB(10, 5, 20),
+						TextColor = Color3.fromRGB(255, 255, 0), AccentColor = Color3.fromRGB(0, 255, 255),
+						BorderGlowColor = Color3.fromRGB(255, 0, 255), ElementColor = Color3.fromRGB(100, 50, 150)
+					},
+					["5. Sakura Pink"] = {
+						BackgroundColor = Color3.fromRGB(25, 15, 20), SectionColor = Color3.fromRGB(15, 5, 10),
+						TextColor = Color3.fromRGB(255, 220, 230), AccentColor = Color3.fromRGB(255, 105, 180),
+						BorderGlowColor = Color3.fromRGB(150, 50, 100), ElementColor = Color3.fromRGB(200, 100, 150)
+					},
+					["6. Ocean Blue"] = {
+						BackgroundColor = Color3.fromRGB(5, 15, 25), SectionColor = Color3.fromRGB(0, 5, 15),
+						TextColor = Color3.fromRGB(200, 230, 255), AccentColor = Color3.fromRGB(0, 150, 255),
+						BorderGlowColor = Color3.fromRGB(0, 50, 100), ElementColor = Color3.fromRGB(30, 80, 150)
+					},
+					["7. Monokai"] = {
+						BackgroundColor = Color3.fromRGB(39, 40, 34), SectionColor = Color3.fromRGB(30, 31, 28),
+						TextColor = Color3.fromRGB(248, 248, 242), AccentColor = Color3.fromRGB(166, 226, 46),
+						BorderGlowColor = Color3.fromRGB(102, 217, 239), ElementColor = Color3.fromRGB(117, 113, 94)
+					},
+					["8. Dracula"] = {
+						BackgroundColor = Color3.fromRGB(40, 42, 54), SectionColor = Color3.fromRGB(30, 31, 41),
+						TextColor = Color3.fromRGB(248, 248, 242), AccentColor = Color3.fromRGB(189, 147, 249),
+						BorderGlowColor = Color3.fromRGB(98, 114, 164), ElementColor = Color3.fromRGB(68, 71, 90)
+					},
+					["9. Forest Green"] = {
+						BackgroundColor = Color3.fromRGB(10, 20, 10), SectionColor = Color3.fromRGB(5, 10, 5),
+						TextColor = Color3.fromRGB(200, 255, 200), AccentColor = Color3.fromRGB(34, 139, 34),
+						BorderGlowColor = Color3.fromRGB(0, 50, 0), ElementColor = Color3.fromRGB(46, 139, 87)
+					},
+					["10. Gold & Black"] = {
+						BackgroundColor = Color3.fromRGB(15, 15, 15), SectionColor = Color3.fromRGB(5, 5, 5),
+						TextColor = Color3.fromRGB(255, 255, 255), AccentColor = Color3.fromRGB(255, 215, 0),
+						BorderGlowColor = Color3.fromRGB(150, 120, 0), ElementColor = Color3.fromRGB(100, 80, 0)
+					},
+					["11. Slate Modern"] = {
+						BackgroundColor = Color3.fromRGB(12, 14, 18), SectionColor = Color3.fromRGB(18, 21, 26),
+						TextColor = Color3.fromRGB(240, 244, 248), AccentColor = Color3.fromRGB(91, 140, 255),
+						BorderGlowColor = Color3.fromRGB(54, 62, 78), ElementColor = Color3.fromRGB(45, 52, 64)
+					},
+					["12. Glass Neon"] = {
+						BackgroundColor = Color3.fromRGB(10, 12, 16), SectionColor = Color3.fromRGB(17, 20, 28),
+						TextColor = Color3.fromRGB(235, 238, 242), AccentColor = Color3.fromRGB(0, 229, 255),
+						BorderGlowColor = Color3.fromRGB(70, 90, 115), ElementColor = Color3.fromRGB(38, 45, 58)
+					},
+					["13. Soft Titanium"] = {
+						BackgroundColor = Color3.fromRGB(20, 22, 26), SectionColor = Color3.fromRGB(28, 31, 36),
+						TextColor = Color3.fromRGB(245, 246, 247), AccentColor = Color3.fromRGB(124, 196, 255),
+						BorderGlowColor = Color3.fromRGB(58, 66, 78), ElementColor = Color3.fromRGB(54, 60, 68)
+					},
+					["14. Midnight Violet"] = {
+						BackgroundColor = Color3.fromRGB(14, 12, 22), SectionColor = Color3.fromRGB(22, 18, 34),
+						TextColor = Color3.fromRGB(244, 240, 255), AccentColor = Color3.fromRGB(171, 120, 255),
+						BorderGlowColor = Color3.fromRGB(70, 55, 105), ElementColor = Color3.fromRGB(54, 44, 82)
+					},
+					["15. Mono Neon"] = {
+						BackgroundColor = Color3.fromRGB(10, 10, 12), SectionColor = Color3.fromRGB(18, 18, 22),
+						TextColor = Color3.fromRGB(242, 242, 242), AccentColor = Color3.fromRGB(57, 255, 20),
+						BorderGlowColor = Color3.fromRGB(44, 44, 52), ElementColor = Color3.fromRGB(34, 34, 40)
+					}
+				}
+
+				local presetNames = {}
+				for name, _ in pairs(Presets) do table.insert(presetNames, name) end
+				table.sort(presetNames)
+
+				local PresetDropdown = ThemeSection:Dropdown({
+					Name = "Choose Preset",
+					Options = presetNames, 
+					
+					Callback = function(Selected)
+						local data = Presets[Selected]
+						if data then
+							for key, color in pairs(data) do
+								MacLib:SetThemeColor(key, color) 
+							end
+							WindowFunctions:Notify({
+								Title = "Interface",
+								Description = "Applied: " .. Selected
+							})
+						end
+					end
+				})
+
+				ThemeSection:Divider()
+
+				local function FormatName(str)
+					return str:gsub("(%u)", " %1"):gsub("^%s+", "")
+				end
+
+				for key, currentColor in pairs(MacLib.Theme) do
+					ThemeSection:Colorpicker({
+						Name = FormatName(key),  
+						Default = currentColor,   
+						Callback = function(newColor)
+							MacLib:SetThemeColor(key, newColor)
+						end
+					})
+				end
+
+				return ThemeSection
 			end
 
 			function TabFunctions:InsertConfigSection(Side)
