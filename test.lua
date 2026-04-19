@@ -2807,7 +2807,7 @@ function MacLib:Window(Settings)
 						if db then return end
 						db = true
 						local defaultDropdownSize = 38
-						local MAX_HEIGHT = 200
+						local MAX_HEIGHT = 350
 						local isDropdownOpen = not dropped
 						local contentHeight = CalculateDropdownSize()
 						local finalHeight = math.min(contentHeight, MAX_HEIGHT)
