@@ -4872,7 +4872,7 @@ function MacLib:Window(Settings)
 					Name = "UI Scale",
 					Minimum = 70,
 					Maximum = 150,
-					Default = 100,
+					Default = 1,
 					DisplayMethod = "Percent",
 					Precision = 0,
 					Callback = function(val)
@@ -4950,10 +4950,6 @@ function MacLib:Window(Settings)
 					end
 					return true
 				end
-				local function getConfigList()
-					local configs = MacLib:RefreshConfigList()
-					return type(configs) == "table" and configs or {}
-				end
 
 				section:Header({Text = "Configs"})
 
@@ -4970,7 +4966,7 @@ function MacLib:Window(Settings)
 				-- DROPDOWN
 				local dropdown = section:Dropdown({
 					Name = "Available Configs",
-					Options = getConfigList(),
+					Options = type(MacLib:RefreshConfigList()) == "table" and MacLib:RefreshConfigList() or {},
 					Callback = function(val)
 						selectedConfig = val
 					end
@@ -4997,7 +4993,7 @@ function MacLib:Window(Settings)
 						if name ~= "" then
 							MacLib:SaveConfig(name)
 							dropdown:ClearOptions()
-							dropdown:InsertOptions(getConfigList())
+							dropdown:InsertOptions(MacLib:RefreshConfigList())
 						end
 					end
 				})
@@ -5040,7 +5036,7 @@ function MacLib:Window(Settings)
 						end
 						delfile(MacLib.Folder.."/settings/"..selectedConfig..".json")
 						dropdown:ClearOptions()
-						dropdown:InsertOptions(getConfigList())
+						dropdown:InsertOptions(MacLib:RefreshConfigList())
 					end
 				})
 
@@ -5114,8 +5110,7 @@ function MacLib:Window(Settings)
 
 				return section
 			end
-		end
-	end
+
 	function WindowFunctions:Notify(Settings)
 		local NotificationFunctions = {}
 
