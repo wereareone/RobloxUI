@@ -1670,69 +1670,7 @@ function MacLib:Window(Settings)
 				sectionUIPadding.PaddingTop = UDim.new(0, 22)
 				sectionUIPadding.Parent = section
 				
-				function TabFunctions:InsertThemeSection(Side)
-					local ThemeSection = TabFunctions:Section({ 
-						Name = "Theme Customization", 
-						Side = Side or "Left"        
-					})
-
-					local Presets = {
-						["Default (Dark)"] = {
-							BackgroundColor = Color3.fromRGB(15, 15, 15),
-							AccentColor = Color3.fromRGB(120, 180, 255),
-							TextColor = Color3.fromRGB(255, 255, 255)
-						},
-						["Blood Color"] = {
-							BackgroundColor = Color3.fromRGB(15, 5, 5),
-							AccentColor = Color3.fromRGB(255, 50, 50),
-							TextColor = Color3.fromRGB(255, 200, 200)
-						},
-						["Mint Color"] = {
-							BackgroundColor = Color3.fromRGB(15, 20, 15),
-							AccentColor = Color3.fromRGB(50, 255, 150),
-							TextColor = Color3.fromRGB(200, 255, 200)
-						}
-					}
-
-					local PresetDropdown = ThemeSection:Dropdown({
-						Name = "Choose Preset",
-						Options = {"Default (Dark)", "Blood Color", "Mint Color"}, 
-						
-						Callback = function(Selected)
-							local data = Presets[Selected]
-							
-							if data then
-								for key, color in pairs(data) do
-									MacLib.Theme[key] = color
-								end
-								
-								WindowFunctions:Notify({
-									Title = "Interface",
-									Description = "Theme Applied: " .. Selected
-								})
-							end
-						end
-					})
-
-					ThemeSection:Divider()
-
-					local function FormatName(str)
-						return str:gsub("(%u)", " %1"):gsub("^%s+", "")
-					end
-
-					for key, currentColor in pairs(MacLib.Theme) do
-						ThemeSection:Colorpicker({
-							Name = FormatName(key),  
-							Default = currentColor,   
-
-						Callback = function(newColor)
-								MacLib:SetThemeColor(key, newColor)
-							end
-						})
-					end
-
-					return ThemeSection
-				end
+			
 
 				function SectionFunctions:Button(Settings, Flag)
 					local ButtonFunctions = {Settings = Settings}
@@ -4785,6 +4723,70 @@ function MacLib:Window(Settings)
 			function TabFunctions:Select()
 				SelectCurrentTab()
 			end
+
+			function TabFunctions:InsertThemeSection(Side)
+				local ThemeSection = TabFunctions:Section({ 
+					Name = "Theme Customization", 
+					Side = Side or "Left"        
+				})
+
+				local Presets = {
+					["Default (Dark)"] = {
+						BackgroundColor = Color3.fromRGB(15, 15, 15),
+						AccentColor = Color3.fromRGB(120, 180, 255),
+						TextColor = Color3.fromRGB(255, 255, 255)
+					},
+					["Blood Color"] = {
+						BackgroundColor = Color3.fromRGB(15, 5, 5),
+						AccentColor = Color3.fromRGB(255, 50, 50),
+						TextColor = Color3.fromRGB(255, 200, 200)
+					},
+					["Mint Color"] = {
+						BackgroundColor = Color3.fromRGB(15, 20, 15),
+						AccentColor = Color3.fromRGB(50, 255, 150),
+						TextColor = Color3.fromRGB(200, 255, 200)
+					}
+				}
+
+				local PresetDropdown = ThemeSection:Dropdown({
+					Name = "Choose Preset",
+					Options = {"Default (Dark)", "Blood Color", "Mint Color"}, 
+					
+					Callback = function(Selected)
+						local data = Presets[Selected]
+						
+						if data then
+							for key, color in pairs(data) do
+								MacLib.Theme[key] = color
+							end
+							
+							WindowFunctions:Notify({
+								Title = "Interface",
+								Description = "Theme Applied: " .. Selected
+							})
+						end
+					end
+				})
+
+					ThemeSection:Divider()
+
+					local function FormatName(str)
+						return str:gsub("(%u)", " %1"):gsub("^%s+", "")
+					end
+
+					for key, currentColor in pairs(MacLib.Theme) do
+						ThemeSection:Colorpicker({
+							Name = FormatName(key),  
+							Default = currentColor,   
+
+						Callback = function(newColor)
+								MacLib:SetThemeColor(key, newColor)
+							end
+						})
+					end
+
+					return ThemeSection
+				end
 
 			function TabFunctions:InsertConfigSection(Side)
 				local configSection = TabFunctions:Section({ Side = "Left" })
