@@ -4724,6 +4724,60 @@ function MacLib:Window(Settings)
 				SelectCurrentTab()
 			end
 
+			function TabFunctions:InsertUISettingsSection(Side)
+				local UISection = TabFunctions:Section({ 
+					Name = "Advanced Settings", 
+					Side = Side or "Right" 
+				})
+
+				-- Toggle UI Keybind
+				UISection:Keybind({
+					Name = "Toggle Menu Key",
+					Default = Enum.KeyCode.RightControl,
+					Callback = function(Key)
+						WindowFunctions:SetKeybind(Key)
+						WindowFunctions:Notify({
+							Title = "UI Settings",
+							Description = "Menu toggle key changed to: " .. Key.Name
+						})
+					end
+				})
+
+				UISection:Divider()
+
+				-- Acrylic Blur Toggle
+				UISection:Toggle({
+					Name = "Acrylic Blur Effect",
+					Default = WindowFunctions:GetAcrylicBlurState(),
+					Callback = function(State)
+						WindowFunctions:SetAcrylicBlurState(State)
+					end
+				})
+
+				-- Notifications Toggle
+				UISection:Toggle({
+					Name = "Enable Notifications",
+					Default = WindowFunctions:GetNotificationsState(),
+					Callback = function(State)
+						WindowFunctions:SetNotificationsState(State)
+					end
+				})
+
+				-- Global UI Scale
+				UISection:Slider({
+					Name = "Interface Scale",
+					Default = WindowFunctions:GetScale() * 100,
+					Minimum = 50,
+					Maximum = 150,
+					DisplayMethod = "Percent",
+					Callback = function(Value)
+						WindowFunctions:SetScale(Value / 100)
+					end
+				})
+
+				return UISection
+			end
+
 			function TabFunctions:InsertThemeSection(Side)
 				local ThemeSection = TabFunctions:Section({ 
 					Name = "Theme Customization", 
