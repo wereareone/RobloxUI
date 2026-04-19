@@ -1907,6 +1907,18 @@ function MacLib:Window(Settings)
 
 				function SectionFunctions:Slider(Settings, Flag)
 					local SliderFunctions = { Settings = Settings, IgnoreConfig = false, Class = "Slider" }
+					SliderFunctions.Settings.Minimum = tonumber(SliderFunctions.Settings.Minimum or SliderFunctions.Settings.Min) or 0
+					SliderFunctions.Settings.Maximum = tonumber(SliderFunctions.Settings.Maximum or SliderFunctions.Settings.Max) or 100
+					if SliderFunctions.Settings.Maximum <= SliderFunctions.Settings.Minimum then
+						SliderFunctions.Settings.Maximum = SliderFunctions.Settings.Minimum + 1
+					end
+					SliderFunctions.Settings.Default = tonumber(SliderFunctions.Settings.Default)
+						or SliderFunctions.Settings.Minimum
+					SliderFunctions.Settings.Default = math.clamp(
+						SliderFunctions.Settings.Default,
+						SliderFunctions.Settings.Minimum,
+						SliderFunctions.Settings.Maximum
+					)
 					local slider = Instance.new("Frame")
 					slider.Name = "Slider"
 					slider.AutomaticSize = Enum.AutomaticSize.Y
@@ -2063,16 +2075,20 @@ function MacLib:Window(Settings)
 							local input = val
 							posXScale = math.clamp((input.Position.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
 						else
-							local value = val
-							posXScale = (value - SliderFunctions.Settings.Minimum) / (SliderFunctions.Settings.Maximum - Settings.Minimum)
+							local value = tonumber(val) or SliderFunctions.Settings.Minimum
+							posXScale = (value - SliderFunctions.Settings.Minimum)
+								/ (SliderFunctions.Settings.Maximum - SliderFunctions.Settings.Minimum)
 						end
 
 						local pos = UDim2.new(posXScale, 0, 0.5, 0)
 						sliderHead.Position = pos
 
-						finalValue = posXScale * (SliderFunctions.Settings.Maximum - SliderFunctions.Settings.Minimum) + Settings.Minimum
+						finalValue = posXScale * (SliderFunctions.Settings.Maximum - SliderFunctions.Settings.Minimum)
+							+ SliderFunctions.Settings.Minimum
 
-						sliderValue.Text = (Settings.Prefix or "") .. ValueDisplayMethod(finalValue, SliderFunctions.Settings.Precision) .. (Settings.Suffix or "")
+						sliderValue.Text = (SliderFunctions.Settings.Prefix or "")
+							.. ValueDisplayMethod(finalValue, SliderFunctions.Settings.Precision)
+							.. (SliderFunctions.Settings.Suffix or "")
 
 						if not ignorecallback then
 							task.spawn(function()
@@ -2118,7 +2134,9 @@ function MacLib:Window(Settings)
 							local newValue = math.clamp(value, SliderFunctions.Settings.Minimum, SliderFunctions.Settings.Maximum)
 							SetValue(newValue)
 						else
-							sliderValue.Text = ValueDisplayMethod(sliderValue)
+							sliderValue.Text = (SliderFunctions.Settings.Prefix or "")
+								.. ValueDisplayMethod(finalValue or SliderFunctions.Settings.Default, SliderFunctions.Settings.Precision)
+								.. (SliderFunctions.Settings.Suffix or "")
 						end
 
 						if SliderFunctions.Settings.onInputComplete then
@@ -2149,7 +2167,7 @@ function MacLib:Window(Settings)
 					section:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateSliderBarSize)
 
 					function SliderFunctions:UpdateName(Name)
-						sliderName = Name
+						sliderName.Text = Name
 					end
 					function SliderFunctions:SetVisibility(State)
 						slider.Visible = State
