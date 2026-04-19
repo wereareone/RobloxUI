@@ -4730,7 +4730,9 @@ function MacLib:Window(Settings)
 					Side = Side or "Right" 
 				})
 
-				-- Toggle UI Keybind
+				-- --- [ GROUP 1: MENU CONTROLS ] ---
+				UISection:Header({ Text = "Menu Controls" })
+
 				UISection:Keybind({
 					Name = "Toggle Menu Key",
 					Default = Enum.KeyCode.RightControl,
@@ -4743,9 +4745,23 @@ function MacLib:Window(Settings)
 					end
 				})
 
+				UISection:Slider({
+					Name = "Interface Scale",
+					Default = WindowFunctions:GetScale() * 100,
+					Minimum = 50,
+					Maximum = 150,
+					DisplayMethod = "Percent",
+					Precision = 0,
+					Callback = function(Value)
+						WindowFunctions:SetScale(Value / 100)
+					end
+				})
+
 				UISection:Divider()
 
-				-- Acrylic Blur Toggle
+				-- --- [ GROUP 2: VISUAL EFFECTS ] ---
+				UISection:Header({ Text = "Visual Effects" })
+
 				UISection:Toggle({
 					Name = "Acrylic Blur Effect",
 					Default = WindowFunctions:GetAcrylicBlurState(),
@@ -4754,7 +4770,19 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				-- Notifications Toggle
+				UISection:Toggle({
+					Name = "Display User Info",
+					Default = WindowFunctions:GetUserInfoState(),
+					Callback = function(State)
+						WindowFunctions:SetUserInfoState(State)
+					end
+				})
+
+				UISection:Divider()
+
+				-- --- [ GROUP 3: SYSTEM SETTINGS ] ---
+				UISection:Header({ Text = "System Settings" })
+
 				UISection:Toggle({
 					Name = "Enable Notifications",
 					Default = WindowFunctions:GetNotificationsState(),
@@ -4763,15 +4791,17 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				-- Global UI Scale
-				UISection:Slider({
-					Name = "Interface Scale",
-					Default = WindowFunctions:GetScale() * 100,
-					Minimum = 50,
-					Maximum = 150,
-					DisplayMethod = "Percent",
-					Callback = function(Value)
-						WindowFunctions:SetScale(Value / 100)
+				UISection:Toggle({
+					Name = "Auto Save Configuration",
+					Default = MacLib.AutoSaveEnabled or false,
+					Callback = function(State)
+						MacLib.AutoSaveEnabled = State
+						if State and MacLib.CurrentConfigName == "" then
+							WindowFunctions:Notify({
+								Title = "Warning",
+								Description = "Please Load or Create a config first to enable Auto Save."
+							})
+						end
 					end
 				})
 
