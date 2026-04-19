@@ -5048,6 +5048,29 @@ function MacLib:Window(Settings)
 				return section
 			end
 
+			tabs[tabSwitcher] = {
+				tabContent = elements1,
+				tabStroke = tabSwitcherUIStroke,
+				switcherImage = tabImage,
+				switcherName = tabSwitcherName,
+			}
+
+			if not currentTabInstance then
+				SelectCurrentTab()
+			end
+
+			return TabFunctions
+		end
+
+		SectionFunctions.Instance = tabGroup
+
+		function SectionFunctions:SetVisibility(State)
+			tabGroup.Visible = State
+		end
+
+		return SectionFunctions
+	end
+
 	function WindowFunctions:Notify(Settings)
 		local NotificationFunctions = {}
 
