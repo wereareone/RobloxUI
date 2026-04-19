@@ -4757,7 +4757,7 @@ function MacLib:Window(Settings)
 						
 						if data then
 							for key, color in pairs(data) do
-								MacLib.Theme[key] = color
+								MacLib:SetThemeColor(key, color) 
 							end
 							
 							WindowFunctions:Notify({
