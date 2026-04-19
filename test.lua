@@ -4730,9 +4730,7 @@ function MacLib:Window(Settings)
 					Side = Side or "Right" 
 				})
 
-				-- --- [ GROUP 1: MENU CONTROLS ] ---
-				UISection:Header({ Text = "Menu Controls" })
-
+				-- Toggle UI Keybind
 				UISection:Keybind({
 					Name = "Toggle Menu Key",
 					Default = Enum.KeyCode.RightControl,
@@ -4745,23 +4743,9 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				UISection:Slider({
-					Name = "Interface Scale",
-					Default = WindowFunctions:GetScale() * 100,
-					Minimum = 50,
-					Maximum = 150,
-					DisplayMethod = "Percent",
-					Precision = 0,
-					Callback = function(Value)
-						WindowFunctions:SetScale(Value / 100)
-					end
-				})
-
 				UISection:Divider()
 
-				-- --- [ GROUP 2: VISUAL EFFECTS ] ---
-				UISection:Header({ Text = "Visual Effects" })
-
+				-- Acrylic Blur Toggle
 				UISection:Toggle({
 					Name = "Acrylic Blur Effect",
 					Default = WindowFunctions:GetAcrylicBlurState(),
@@ -4770,19 +4754,7 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				UISection:Toggle({
-					Name = "Display User Info",
-					Default = WindowFunctions:GetUserInfoState(),
-					Callback = function(State)
-						WindowFunctions:SetUserInfoState(State)
-					end
-				})
-
-				UISection:Divider()
-
-				-- --- [ GROUP 3: SYSTEM SETTINGS ] ---
-				UISection:Header({ Text = "System Settings" })
-
+				-- Notifications Toggle
 				UISection:Toggle({
 					Name = "Enable Notifications",
 					Default = WindowFunctions:GetNotificationsState(),
@@ -4791,23 +4763,456 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				UISection:Toggle({
-					Name = "Auto Save Configuration",
-					Default = MacLib.AutoSaveEnabled or false,
-					Callback = function(State)
-						MacLib.AutoSaveEnabled = State
-						if State and MacLib.CurrentConfigName == "" then
-							WindowFunctions:Notify({
-								Title = "Warning",
-								Description = "Please Load or Create a config first to enable Auto Save."
-							})
-						end
+				-- Global UI Scale
+				UISection:Slider({
+					Name = "Interface Scale",
+					Default = WindowFunctions:GetScale() * 100,
+					Minimum = 50,
+					Maximum = 150,
+					DisplayMethod = "Percent",
+					Callback = function(Value)
+						WindowFunctions:SetScale(Value / 100)
 					end
 				})
 
 				return UISection
 			end
+-- ================================================================
+--  InsertSettingsSection
+--  Thay thế hoàn toàn InsertThemeSection + InsertConfigSection
+--  Tương thích 100% với Maclib API thực tế
+--
+--  Cách dùng (trong tab):
+--    tabs.Settings:InsertSettingsSection("Left")
+--
+--  Hoặc split Left/Right:
+--    tabs.Settings:InsertSettingsSection("Left")   -- Theme + Config
+--    tabs.Settings:InsertSettingsSection("Right")  -- UI Controls (xem cuối file)
+-- ================================================================
 
+function TabFunctions:InsertSettingsSection(Side)
+
+	-- ── Helper nội bộ ─────────────────────────────────────────
+	local function Notify(title, desc)
+		WindowFunctions:Notify({ Title = title, Description = desc })
+	end
+
+	local function IsBlank(s)
+		return not s or string.gsub(s, "%s", "") == ""
+	end
+
+	-- ════════════════════════════════════════════════════════════
+	--  SECTION 1: THEME
+	-- ════════════════════════════════════════════════════════════
+	local ThemeSection = TabFunctions:Section({
+		Name = "Theme",
+		Side  = Side or "Left",
+	})
+
+	-- ── 1A. Quick Presets ────────────────────────────────────
+	ThemeSection:Header({ Text = "Quick Presets" })
+
+	local ThemePresets = {
+		["Default (Dark)"] = {
+			BackgroundColor = Color3.fromRGB(15, 15, 15),
+			AccentColor     = Color3.fromRGB(120, 180, 255),
+			TextColor       = Color3.fromRGB(255, 255, 255),
+			SectionColor    = Color3.fromRGB(0,   0,   0),
+			ElementColor    = Color3.fromRGB(87,  86,  86),
+		},
+		["Blood"] = {
+			BackgroundColor = Color3.fromRGB(15, 5, 5),
+			AccentColor     = Color3.fromRGB(255, 50, 50),
+			TextColor       = Color3.fromRGB(255, 200, 200),
+			SectionColor    = Color3.fromRGB(8,   0,   0),
+			ElementColor    = Color3.fromRGB(120, 60, 60),
+		},
+		["Mint"] = {
+			BackgroundColor = Color3.fromRGB(15, 20, 15),
+			AccentColor     = Color3.fromRGB(50, 255, 150),
+			TextColor       = Color3.fromRGB(200, 255, 200),
+			SectionColor    = Color3.fromRGB(0,   8,   4),
+			ElementColor    = Color3.fromRGB(60, 120, 80),
+		},
+		["Twilight"] = {
+			BackgroundColor = Color3.fromRGB(10, 10, 26),
+			AccentColor     = Color3.fromRGB(180, 130, 255),
+			TextColor       = Color3.fromRGB(230, 220, 255),
+			SectionColor    = Color3.fromRGB(5,   5,  18),
+			ElementColor    = Color3.fromRGB(90,  70, 130),
+		},
+		["Amber"] = {
+			BackgroundColor = Color3.fromRGB(18, 14, 8),
+			AccentColor     = Color3.fromRGB(255, 190, 50),
+			TextColor       = Color3.fromRGB(255, 240, 200),
+			SectionColor    = Color3.fromRGB(10,  8,   0),
+			ElementColor    = Color3.fromRGB(130, 100, 40),
+		},
+	}
+
+	local presetNames = {
+		"Default (Dark)", "Blood", "Mint", "Twilight", "Amber"
+	}
+
+	ThemeSection:Dropdown({
+		Name    = "Choose Preset",
+		Options = presetNames,
+		Callback = function(selected)
+			local data = ThemePresets[selected]
+			if not data then return end
+			for key, color in pairs(data) do
+				MacLib:SetThemeColor(key, color)
+			end
+			Notify("Theme", "Applied: " .. selected)
+		end,
+	})
+
+	ThemeSection:Divider()
+
+	-- ── 1B. Color Customization ──────────────────────────────
+	ThemeSection:Header({ Text = "Color Customization" })
+
+	-- Format "BackgroundColor" → "Background Color"
+	local function FormatKey(str)
+		return str:gsub("(%u)", " %1"):gsub("^%s+", "")
+	end
+
+	-- Sort keys alphabetically so order is consistent
+	local sortedKeys = {}
+	for key in pairs(MacLib.Theme) do
+		table.insert(sortedKeys, key)
+	end
+	table.sort(sortedKeys)
+
+	for _, key in ipairs(sortedKeys) do
+		local currentColor = MacLib.Theme[key]
+		ThemeSection:Colorpicker({
+			Name     = FormatKey(key),
+			Default  = currentColor,
+			Callback = function(newColor)
+				MacLib:SetThemeColor(key, newColor)
+			end,
+		})
+	end
+
+	ThemeSection:Divider()
+
+	-- ── 1C. Reset ────────────────────────────────────────────
+	ThemeSection:Button({
+		Name = "Reset to Default (Dark)",
+		Callback = function()
+			local data = ThemePresets["Default (Dark)"]
+			for key, color in pairs(data) do
+				MacLib:SetThemeColor(key, color)
+			end
+			Notify("Theme", "Reset to Default (Dark).")
+		end,
+	})
+
+	-- ════════════════════════════════════════════════════════════
+	--  SECTION 2: CONFIG
+	-- ════════════════════════════════════════════════════════════
+	local ConfigSection = TabFunctions:Section({
+		Name = "Config",
+		Side  = Side or "Left",
+	})
+
+	-- Guard: Studio environment không có filesystem
+	if isStudio then
+		ConfigSection:Label({ Text = "Config system unavailable in Studio." })
+		return ThemeSection  -- vẫn trả về để caller không bị lỗi
+	end
+
+	-- ── State ────────────────────────────────────────────────
+	local inputPath     = nil
+	local selectedConfig = nil
+
+	-- ── Helpers ──────────────────────────────────────────────
+	local activeLabel = ConfigSection:Label({ Text = "Active Config: None" })
+
+	local function SetActive(name)
+		MacLib.CurrentConfigName = name
+		activeLabel:UpdateName("Active Config: " .. name)
+	end
+
+	local configDropdown  -- forward-declare cho RefreshList
+
+	local function RefreshList()
+		configDropdown:ClearOptions()
+		configDropdown:InsertOptions(MacLib:RefreshConfigList())
+	end
+
+	-- ── 2A. Config Management ────────────────────────────────
+	ConfigSection:Header({ Text = "Config Management" })
+
+	ConfigSection:Input({
+		Name               = "Config Name",
+		Placeholder        = "Enter config name...",
+		AcceptedCharacters = "All",
+		Callback = function(text)
+			inputPath = text
+		end,
+	})
+
+	configDropdown = ConfigSection:Dropdown({
+		Name     = "Select Config",
+		Multi    = false,
+		Required = false,
+		Options  = MacLib:RefreshConfigList(),
+		Callback = function(value)
+			selectedConfig = value
+		end,
+	})
+
+	-- Create
+	ConfigSection:Button({
+		Name = "Create Config",
+		Callback = function()
+			if IsBlank(inputPath) then
+				Notify("Config", "Name cannot be empty.")
+				return
+			end
+			local ok, err = MacLib:SaveConfig(inputPath)
+			if not ok then
+				Notify("Config", "Save failed: " .. tostring(err))
+				return
+			end
+			Notify("Config", string.format("Created: %q", inputPath))
+			RefreshList()
+		end,
+	})
+
+	-- Load
+	ConfigSection:Button({
+		Name = "Load Selected Config",
+		Callback = function()
+			if not selectedConfig then
+				Notify("Config", "Select a config first.")
+				return
+			end
+			local ok, err = MacLib:LoadConfig(selectedConfig)
+			if not ok then
+				Notify("Config", "Load failed: " .. tostring(err))
+				return
+			end
+			SetActive(selectedConfig)
+			Notify("Config", string.format("Loaded: %q", selectedConfig))
+		end,
+	})
+
+	-- Overwrite
+	ConfigSection:Button({
+		Name = "Overwrite Selected Config",
+		Callback = function()
+			if not selectedConfig then
+				Notify("Config", "Select a config first.")
+				return
+			end
+			local ok, err = MacLib:SaveConfig(selectedConfig)
+			if not ok then
+				Notify("Config", "Overwrite failed: " .. tostring(err))
+				return
+			end
+			SetActive(selectedConfig)
+			Notify("Config", string.format("Overwritten: %q", selectedConfig))
+		end,
+	})
+
+	-- Delete
+	ConfigSection:Button({
+		Name = "Delete Selected Config",
+		Callback = function()
+			if not selectedConfig then
+				Notify("Config", "Select a config first.")
+				return
+			end
+			local path = MacLib.Folder .. "/settings/" .. selectedConfig .. ".json"
+			if isfile(path) then
+				delfile(path)
+				Notify("Config", string.format("Deleted: %q", selectedConfig))
+				RefreshList()
+				selectedConfig = nil
+			else
+				Notify("Config", "File not found.")
+			end
+		end,
+	})
+
+	-- Refresh
+	ConfigSection:Button({
+		Name = "Refresh Config List",
+		Callback = function()
+			RefreshList()
+			Notify("Config", "List refreshed.")
+		end,
+	})
+
+	ConfigSection:Divider()
+
+	-- ── 2B. Automation ───────────────────────────────────────
+	ConfigSection:Header({ Text = "Automation" })
+
+	local autoloadLabel = ConfigSection:Label({ Text = "Autoload Config: None" })
+
+	-- Restore autoload label nếu file tồn tại
+	local autoloadPath = MacLib.Folder .. "/settings/autoload.txt"
+	if isfile(autoloadPath) then
+		local name = readfile(autoloadPath)
+		if not IsBlank(name) then
+			autoloadLabel:UpdateName("Autoload Config: " .. name)
+		end
+	end
+
+	ConfigSection:Button({
+		Name = "Set Selected as Autoload",
+		Callback = function()
+			if not selectedConfig then
+				Notify("Automation", "Select a config first.")
+				return
+			end
+			writefile(autoloadPath, selectedConfig)
+			autoloadLabel:UpdateName("Autoload Config: " .. selectedConfig)
+			Notify("Automation", string.format("Autoload set to %q.", selectedConfig))
+		end,
+	})
+
+	ConfigSection:Button({
+		Name = "Clear Autoload",
+		Callback = function()
+			if isfile(autoloadPath) then
+				delfile(autoloadPath)
+				autoloadLabel:UpdateName("Autoload Config: None")
+				Notify("Automation", "Autoload cleared.")
+			else
+				Notify("Automation", "No autoload file found.")
+			end
+		end,
+	})
+
+	ConfigSection:Toggle({
+		Name    = "Auto-Save Configuration",
+		Default = MacLib.AutoSaveEnabled,
+		Callback = function(state)
+			MacLib.AutoSaveEnabled = state
+			if state and IsBlank(MacLib.CurrentConfigName) then
+				Notify("Automation", "Load or overwrite a config to enable auto-save.")
+			end
+		end,
+	})
+
+	ConfigSection:Divider()
+
+	-- ── 2C. Built-in Presets ─────────────────────────────────
+	ConfigSection:Header({ Text = "Built-in Presets" })
+
+	local BuiltinPresets = {
+		{
+			Name = "Legit Farm",
+			Desc = "Subtle, human-like inputs. Low risk, slow gains.",
+			-- Apply = function() end   ← uncomment and fill in your logic
+		},
+		{
+			Name = "Max Performance",
+			Desc = "Optimized for speed and efficiency. High intensity.",
+			-- Apply = function() end
+		},
+		{
+			Name = "Full Features",
+			Desc = "All modules enabled. For power users.",
+			-- Apply = function() end
+		},
+	}
+
+	local builtinNames = {}
+	local builtinDesc  = {}
+	for _, p in ipairs(BuiltinPresets) do
+		table.insert(builtinNames, p.Name)
+		builtinDesc[p.Name] = p.Desc
+	end
+
+	-- Label yang berubah saat dropdown berubah
+	local presetDescLabel = ConfigSection:Label({
+		Text = "Select a preset above to see its description."
+	})
+
+	ConfigSection:Dropdown({
+		Name    = "Load Built-in Preset",
+		Options = builtinNames,
+		Callback = function(selected)
+			presetDescLabel:UpdateName(builtinDesc[selected] or "")
+
+			-- Cari preset và chạy Apply nếu có
+			for _, p in ipairs(BuiltinPresets) do
+				if p.Name == selected and p.Apply then
+					p.Apply()
+				end
+			end
+
+			Notify("Presets", "Applied: " .. selected)
+		end,
+	})
+
+	-- ════════════════════════════════════════════════════════════
+	--  SECTION 3: UI CONTROLS  (dùng WindowFunctions trực tiếp)
+	-- ════════════════════════════════════════════════════════════
+	local UISection = TabFunctions:Section({
+		Name = "UI Controls",
+		Side  = Side or "Left",
+	})
+
+	UISection:Header({ Text = "Menu Controls" })
+
+	UISection:Keybind({
+		Name    = "Toggle Menu Key",
+		Default = Enum.KeyCode.RightControl,
+		Callback = function(key)
+			WindowFunctions:SetKeybind(key)
+			Notify("UI Controls", "Menu key: " .. key.Name)
+		end,
+	})
+
+	UISection:Slider({
+		Name          = "Interface Scale",
+		Default       = math.floor(WindowFunctions:GetScale() * 100),
+		Minimum       = 50,
+		Maximum       = 150,
+		DisplayMethod = "Percent",
+		Precision     = 0,
+		Callback = function(value)
+			WindowFunctions:SetScale(value / 100)
+		end,
+	})
+
+	UISection:Divider()
+	UISection:Header({ Text = "Visual Effects" })
+
+	UISection:Toggle({
+		Name    = "Acrylic Blur",
+		Default = WindowFunctions:GetAcrylicBlurState(),
+		Callback = function(state)
+			WindowFunctions:SetAcrylicBlurState(state)
+		end,
+	})
+
+	UISection:Toggle({
+		Name    = "Show User Info",
+		Default = WindowFunctions:GetUserInfoState(),
+		Callback = function(state)
+			WindowFunctions:SetUserInfoState(state)
+		end,
+	})
+
+	UISection:Toggle({
+		Name    = "Notifications",
+		Default = WindowFunctions:GetNotificationsState(),
+		Callback = function(state)
+			WindowFunctions:SetNotificationsState(state)
+		end,
+	})
+
+	-- Trả về section đầu tiên (Theme) — caller có thể bỏ qua
+	return ThemeSection
+end
 			function TabFunctions:InsertThemeSection(Side)
 				local ThemeSection = TabFunctions:Section({ 
 					Name = "Theme Customization", 
@@ -4852,449 +5257,28 @@ function MacLib:Window(Settings)
 					end
 				})
 
-				ThemeSection:Divider()
+					ThemeSection:Divider()
 
-				local function FormatName(str)
-					return str:gsub("(%u)", " %1"):gsub("^%s+", "")
+					local function FormatName(str)
+						return str:gsub("(%u)", " %1"):gsub("^%s+", "")
+					end
+
+					for key, currentColor in pairs(MacLib.Theme) do
+						ThemeSection:Colorpicker({
+							Name = FormatName(key),  
+							Default = currentColor,   
+
+						Callback = function(newColor)
+								MacLib:SetThemeColor(key, newColor)
+							end
+						})
+					end
+
+					return ThemeSection
 				end
 
-				for key, currentColor in pairs(MacLib.Theme) do
-					ThemeSection:Colorpicker({
-						Name = FormatName(key),  
-						Default = currentColor,   
-
-					Callback = function(newColor)
-							MacLib:SetThemeColor(key, newColor)
-						end
-					})
-				end
-
-				return ThemeSection
-			end
-function TabFunctions:InsertSettingsSection(Side)
- 
-	-- ── Helper nội bộ ─────────────────────────────────────────
-	local function Notify(title, desc)
-		WindowFunctions:Notify({ Title = title, Description = desc })
-	end
- 
-	local function IsBlank(s)
-		return not s or string.gsub(s, "%s", "") == ""
-	end
- 
-	-- ════════════════════════════════════════════════════════════
-	--  SECTION 1: THEME
-	-- ════════════════════════════════════════════════════════════
-	local ThemeSection = TabFunctions:Section({
-		Name = "Theme",
-		Side  = Side or "Left",
-	})
- 
-	-- ── 1A. Quick Presets ────────────────────────────────────
-	ThemeSection:Header({ Text = "Quick Presets" })
- 
-	local ThemePresets = {
-		["Default (Dark)"] = {
-			BackgroundColor = Color3.fromRGB(15, 15, 15),
-			AccentColor     = Color3.fromRGB(120, 180, 255),
-			TextColor       = Color3.fromRGB(255, 255, 255),
-			SectionColor    = Color3.fromRGB(0,   0,   0),
-			ElementColor    = Color3.fromRGB(87,  86,  86),
-		},
-		["Blood"] = {
-			BackgroundColor = Color3.fromRGB(15, 5, 5),
-			AccentColor     = Color3.fromRGB(255, 50, 50),
-			TextColor       = Color3.fromRGB(255, 200, 200),
-			SectionColor    = Color3.fromRGB(8,   0,   0),
-			ElementColor    = Color3.fromRGB(120, 60, 60),
-		},
-		["Mint"] = {
-			BackgroundColor = Color3.fromRGB(15, 20, 15),
-			AccentColor     = Color3.fromRGB(50, 255, 150),
-			TextColor       = Color3.fromRGB(200, 255, 200),
-			SectionColor    = Color3.fromRGB(0,   8,   4),
-			ElementColor    = Color3.fromRGB(60, 120, 80),
-		},
-		["Twilight"] = {
-			BackgroundColor = Color3.fromRGB(10, 10, 26),
-			AccentColor     = Color3.fromRGB(180, 130, 255),
-			TextColor       = Color3.fromRGB(230, 220, 255),
-			SectionColor    = Color3.fromRGB(5,   5,  18),
-			ElementColor    = Color3.fromRGB(90,  70, 130),
-		},
-		["Amber"] = {
-			BackgroundColor = Color3.fromRGB(18, 14, 8),
-			AccentColor     = Color3.fromRGB(255, 190, 50),
-			TextColor       = Color3.fromRGB(255, 240, 200),
-			SectionColor    = Color3.fromRGB(10,  8,   0),
-			ElementColor    = Color3.fromRGB(130, 100, 40),
-		},
-	}
- 
-	local presetNames = {
-		"Default (Dark)", "Blood", "Mint", "Twilight", "Amber"
-	}
- 
-	ThemeSection:Dropdown({
-		Name    = "Choose Preset",
-		Options = presetNames,
-		Callback = function(selected)
-			local data = ThemePresets[selected]
-			if not data then return end
-			for key, color in pairs(data) do
-				MacLib:SetThemeColor(key, color)
-			end
-			Notify("Theme", "Applied: " .. selected)
-		end,
-	})
- 
-	ThemeSection:Divider()
- 
-	-- ── 1B. Color Customization ──────────────────────────────
-	ThemeSection:Header({ Text = "Color Customization" })
- 
-	-- Format "BackgroundColor" → "Background Color"
-	local function FormatKey(str)
-		return str:gsub("(%u)", " %1"):gsub("^%s+", "")
-	end
- 
-	-- Sort keys alphabetically so order is consistent
-	local sortedKeys = {}
-	for key in pairs(MacLib.Theme) do
-		table.insert(sortedKeys, key)
-	end
-	table.sort(sortedKeys)
- 
-	for _, key in ipairs(sortedKeys) do
-		local currentColor = MacLib.Theme[key]
-		ThemeSection:Colorpicker({
-			Name     = FormatKey(key),
-			Default  = currentColor,
-			Callback = function(newColor)
-				MacLib:SetThemeColor(key, newColor)
-			end,
-		})
-	end
- 
-	ThemeSection:Divider()
- 
-	-- ── 1C. Reset ────────────────────────────────────────────
-	ThemeSection:Button({
-		Name = "Reset to Default (Dark)",
-		Callback = function()
-			local data = ThemePresets["Default (Dark)"]
-			for key, color in pairs(data) do
-				MacLib:SetThemeColor(key, color)
-			end
-			Notify("Theme", "Reset to Default (Dark).")
-		end,
-	})
- 
-	-- ════════════════════════════════════════════════════════════
-	--  SECTION 2: CONFIG
-	-- ════════════════════════════════════════════════════════════
-	local ConfigSection = TabFunctions:Section({
-		Name = "Config",
-		Side  = Side or "Left",
-	})
- 
-	-- Guard: Studio environment không có filesystem
-	if isStudio then
-		ConfigSection:Label({ Text = "Config system unavailable in Studio." })
-		return ThemeSection  -- vẫn trả về để caller không bị lỗi
-	end
- 
-	-- ── State ────────────────────────────────────────────────
-	local inputPath     = nil
-	local selectedConfig = nil
- 
-	-- ── Helpers ──────────────────────────────────────────────
-	local activeLabel = ConfigSection:Label({ Text = "Active Config: None" })
- 
-	local function SetActive(name)
-		MacLib.CurrentConfigName = name
-		activeLabel:UpdateName("Active Config: " .. name)
-	end
- 
-	local configDropdown  -- forward-declare cho RefreshList
- 
-	local function RefreshList()
-		configDropdown:ClearOptions()
-		configDropdown:InsertOptions(MacLib:RefreshConfigList())
-	end
- 
-	-- ── 2A. Config Management ────────────────────────────────
-	ConfigSection:Header({ Text = "Config Management" })
- 
-	ConfigSection:Input({
-		Name               = "Config Name",
-		Placeholder        = "Enter config name...",
-		AcceptedCharacters = "All",
-		Callback = function(text)
-			inputPath = text
-		end,
-	})
- 
-	configDropdown = ConfigSection:Dropdown({
-		Name     = "Select Config",
-		Multi    = false,
-		Required = false,
-		Options  = MacLib:RefreshConfigList(),
-		Callback = function(value)
-			selectedConfig = value
-		end,
-	})
- 
-	-- Create
-	ConfigSection:Button({
-		Name = "Create Config",
-		Callback = function()
-			if IsBlank(inputPath) then
-				Notify("Config", "Name cannot be empty.")
-				return
-			end
-			local ok, err = MacLib:SaveConfig(inputPath)
-			if not ok then
-				Notify("Config", "Save failed: " .. tostring(err))
-				return
-			end
-			Notify("Config", string.format("Created: %q", inputPath))
-			RefreshList()
-		end,
-	})
- 
-	-- Load
-	ConfigSection:Button({
-		Name = "Load Selected Config",
-		Callback = function()
-			if not selectedConfig then
-				Notify("Config", "Select a config first.")
-				return
-			end
-			local ok, err = MacLib:LoadConfig(selectedConfig)
-			if not ok then
-				Notify("Config", "Load failed: " .. tostring(err))
-				return
-			end
-			SetActive(selectedConfig)
-			Notify("Config", string.format("Loaded: %q", selectedConfig))
-		end,
-	})
- 
-	-- Overwrite
-	ConfigSection:Button({
-		Name = "Overwrite Selected Config",
-		Callback = function()
-			if not selectedConfig then
-				Notify("Config", "Select a config first.")
-				return
-			end
-			local ok, err = MacLib:SaveConfig(selectedConfig)
-			if not ok then
-				Notify("Config", "Overwrite failed: " .. tostring(err))
-				return
-			end
-			SetActive(selectedConfig)
-			Notify("Config", string.format("Overwritten: %q", selectedConfig))
-		end,
-	})
- 
-	-- Delete
-	ConfigSection:Button({
-		Name = "Delete Selected Config",
-		Callback = function()
-			if not selectedConfig then
-				Notify("Config", "Select a config first.")
-				return
-			end
-			local path = MacLib.Folder .. "/settings/" .. selectedConfig .. ".json"
-			if isfile(path) then
-				delfile(path)
-				Notify("Config", string.format("Deleted: %q", selectedConfig))
-				RefreshList()
-				selectedConfig = nil
-			else
-				Notify("Config", "File not found.")
-			end
-		end,
-	})
- 
-	-- Refresh
-	ConfigSection:Button({
-		Name = "Refresh Config List",
-		Callback = function()
-			RefreshList()
-			Notify("Config", "List refreshed.")
-		end,
-	})
- 
-	ConfigSection:Divider()
- 
-	-- ── 2B. Automation ───────────────────────────────────────
-	ConfigSection:Header({ Text = "Automation" })
- 
-	local autoloadLabel = ConfigSection:Label({ Text = "Autoload Config: None" })
- 
-	-- Restore autoload label nếu file tồn tại
-	local autoloadPath = MacLib.Folder .. "/settings/autoload.txt"
-	if isfile(autoloadPath) then
-		local name = readfile(autoloadPath)
-		if not IsBlank(name) then
-			autoloadLabel:UpdateName("Autoload Config: " .. name)
-		end
-	end
- 
-	ConfigSection:Button({
-		Name = "Set Selected as Autoload",
-		Callback = function()
-			if not selectedConfig then
-				Notify("Automation", "Select a config first.")
-				return
-			end
-			writefile(autoloadPath, selectedConfig)
-			autoloadLabel:UpdateName("Autoload Config: " .. selectedConfig)
-			Notify("Automation", string.format("Autoload set to %q.", selectedConfig))
-		end,
-	})
- 
-	ConfigSection:Button({
-		Name = "Clear Autoload",
-		Callback = function()
-			if isfile(autoloadPath) then
-				delfile(autoloadPath)
-				autoloadLabel:UpdateName("Autoload Config: None")
-				Notify("Automation", "Autoload cleared.")
-			else
-				Notify("Automation", "No autoload file found.")
-			end
-		end,
-	})
- 
-	ConfigSection:Toggle({
-		Name    = "Auto-Save Configuration",
-		Default = MacLib.AutoSaveEnabled,
-		Callback = function(state)
-			MacLib.AutoSaveEnabled = state
-			if state and IsBlank(MacLib.CurrentConfigName) then
-				Notify("Automation", "Load or overwrite a config to enable auto-save.")
-			end
-		end,
-	})
- 
-	ConfigSection:Divider()
- 
-	-- ── 2C. Built-in Presets ─────────────────────────────────
-	ConfigSection:Header({ Text = "Built-in Presets" })
- 
-	local BuiltinPresets = {
-		{
-			Name = "Legit Farm",
-			Desc = "Subtle, human-like inputs. Low risk, slow gains.",
-			-- Apply = function() end   ← uncomment and fill in your logic
-		},
-		{
-			Name = "Max Performance",
-			Desc = "Optimized for speed and efficiency. High intensity.",
-			-- Apply = function() end
-		},
-		{
-			Name = "Full Features",
-			Desc = "All modules enabled. For power users.",
-			-- Apply = function() end
-		},
-	}
- 
-	local builtinNames = {}
-	local builtinDesc  = {}
-	for _, p in ipairs(BuiltinPresets) do
-		table.insert(builtinNames, p.Name)
-		builtinDesc[p.Name] = p.Desc
-	end
- 
-	-- Label yang berubah saat dropdown berubah
-	local presetDescLabel = ConfigSection:Label({
-		Text = "Select a preset above to see its description."
-	})
- 
-	ConfigSection:Dropdown({
-		Name    = "Load Built-in Preset",
-		Options = builtinNames,
-		Callback = function(selected)
-			presetDescLabel:UpdateName(builtinDesc[selected] or "")
- 
-			-- Cari preset và chạy Apply nếu có
-			for _, p in ipairs(BuiltinPresets) do
-				if p.Name == selected and p.Apply then
-					p.Apply()
-				end
-			end
- 
-			Notify("Presets", "Applied: " .. selected)
-		end,
-	})
- 
-	-- ════════════════════════════════════════════════════════════
-	--  SECTION 3: UI CONTROLS  (dùng WindowFunctions trực tiếp)
-	-- ════════════════════════════════════════════════════════════
-	local UISection = TabFunctions:Section({
-		Name = "UI Controls",
-		Side  = Side or "Left",
-	})
- 
-	UISection:Header({ Text = "Menu Controls" })
- 
-	UISection:Keybind({
-		Name    = "Toggle Menu Key",
-		Default = Enum.KeyCode.RightControl,
-		Callback = function(key)
-			WindowFunctions:SetKeybind(key)
-			Notify("UI Controls", "Menu key: " .. key.Name)
-		end,
-	})
- 
-	UISection:Slider({
-		Name          = "Interface Scale",
-		Default       = math.floor(WindowFunctions:GetScale() * 100),
-		Minimum       = 50,
-		Maximum       = 150,
-		DisplayMethod = "Percent",
-		Precision     = 0,
-		Callback = function(value)
-			WindowFunctions:SetScale(value / 100)
-		end,
-	})
- 
-	UISection:Divider()
-	UISection:Header({ Text = "Visual Effects" })
- 
-	UISection:Toggle({
-		Name    = "Acrylic Blur",
-		Default = WindowFunctions:GetAcrylicBlurState(),
-		Callback = function(state)
-			WindowFunctions:SetAcrylicBlurState(state)
-		end,
-	})
- 
-	UISection:Toggle({
-		Name    = "Show User Info",
-		Default = WindowFunctions:GetUserInfoState(),
-		Callback = function(state)
-			WindowFunctions:SetUserInfoState(state)
-		end,
-	})
- 
-	UISection:Toggle({
-		Name    = "Notifications",
-		Default = WindowFunctions:GetNotificationsState(),
-		Callback = function(state)
-			WindowFunctions:SetNotificationsState(state)
-		end,
-	})
- 
-	return ThemeSection
-end
 			function TabFunctions:InsertConfigSection(Side)
-				local configSection = TabFunctions:Section({ Side = Side or "Left" })
+				local configSection = TabFunctions:Section({ Side = "Left" })
 
 				if isStudio then
 					configSection:Label({Text = "Config system unavailable. (Environment isStudio)"})
@@ -5303,11 +5287,7 @@ end
 
 				local inputPath = nil
 				local selectedConfig = nil
-				
-				-- --- [ GROUP 1: CONFIG MANAGEMENT ] ---
-				configSection:Header({ Text = "Config Management" })
-
-				local activeLabel = configSection:Label({ Text = "Active Config: None" })
+				local autoloadLabel
 				
 				local function setActiveConfig(name)
 					MacLib.CurrentConfigName = name
@@ -5316,7 +5296,7 @@ end
 				
 				configSection:Input({
 					Name = "Config Name",
-					Placeholder = "Enter config name...",
+					Placeholder = "Name",
 					AcceptedCharacters = "All",
 					Callback = function(input)
 						inputPath = input
@@ -5338,7 +5318,7 @@ end
 					Callback = function()
 						if not inputPath or string.gsub(inputPath, " ", "") == "" then
 							WindowFunctions:Notify({
-								Title = "Config Manager",
+								Title = "Interface",
 								Description = "Config name cannot be empty."
 							})
 							return
@@ -5347,14 +5327,14 @@ end
 						local success, returned = MacLib:SaveConfig(inputPath)
 						if not success then
 							WindowFunctions:Notify({
-								Title = "Config Manager",
-								Description = "Unable to save config. Error: " .. returned
+								Title = "Interface",
+								Description = "Unable to save config, return error: " .. returned
 							})
 						end
 
 						WindowFunctions:Notify({
-							Title = "Config Manager",
-							Description = string.format("Created new config: %q", inputPath),
+							Title = "Interface",
+							Description = string.format("Created config %q", inputPath),
 						})
 
 						configSelection:ClearOptions()
@@ -5363,74 +5343,42 @@ end
 				})
 
 				configSection:Button({
-					Name = "Load Selected Config",
+					Name = "Load Config",
 					Callback = function()
-						if not selectedConfig then 
-							WindowFunctions:Notify({ Title = "Config Manager", Description = "Please select a config first." })
-							return 
-						end
-
-						local success, returned = MacLib:LoadConfig(selectedConfig)
+						local success, returned = MacLib:LoadConfig(configSelection.Value)
 						if not success then
 							WindowFunctions:Notify({
-								Title = "Config Manager",
-								Description = "Unable to load config. Error: " .. returned
+								Title = "Interface",
+								Description = "Unable to load config, return error: " .. returned
 							})
 							return
 						end
 
-						setActiveConfig(selectedConfig)
+						setActiveConfig(name)
 						WindowFunctions:Notify({
-							Title = "Config Manager",
-							Description = string.format("Loaded config: %q", selectedConfig),
+							Title = "Interface",
+							Description = string.format("Loaded config %q", configSelection.Value),
 						})
 					end,
 				})
 
 				configSection:Button({
-					Name = "Overwrite Selected Config",
+					Name = "Overwrite Config",
 					Callback = function()
-						if not selectedConfig then 
-							WindowFunctions:Notify({ Title = "Config Manager", Description = "Please select a config first." })
-							return 
-						end
-
-						local success, returned = MacLib:SaveConfig(selectedConfig)
+						local success, returned = MacLib:SaveConfig(configSelection.Value)
 						if not success then
 							WindowFunctions:Notify({
-								Title = "Config Manager",
-								Description = "Unable to overwrite config. Error: " .. returned
+								Title = "Interface",
+								Description = "Unable to overwrite config, return error: " .. returned
 							})
 							return
 						end
 
-						setActiveConfig(selectedConfig)
+						setActiveConfig(name)
 						WindowFunctions:Notify({
-							Title = "Config Manager",
-							Description = string.format("Successfully overwrote config: %q", selectedConfig),
+							Title = "Interface",
+							Description = string.format("Overwrote config %q", configSelection.Value),
 						})
-					end,
-				})
-
-				configSection:Button({
-					Name = "Delete Selected Config",
-					Callback = function()
-						if not selectedConfig then 
-							WindowFunctions:Notify({ Title = "Config Manager", Description = "Please select a config first." })
-							return 
-						end
-
-						local path = MacLib.Folder .. "/settings/" .. selectedConfig .. ".json"
-						if isfile(path) then
-							delfile(path)
-							WindowFunctions:Notify({
-								Title = "Config Manager",
-								Description = string.format("Deleted config: %q", selectedConfig),
-							})
-							configSelection:ClearOptions()
-							configSelection:InsertOptions(MacLib:RefreshConfigList())
-							selectedConfig = nil
-						end
 					end,
 				})
 
@@ -5439,52 +5387,27 @@ end
 					Callback = function()
 						configSelection:ClearOptions()
 						configSelection:InsertOptions(MacLib:RefreshConfigList())
-						WindowFunctions:Notify({ Title = "Config Manager", Description = "Config list refreshed." })
 					end,
 				})
 
-				configSection:Divider()
-
-				-- --- [ GROUP 2: AUTOMATION ] ---
-				configSection:Header({ Text = "Automation" })
-
-				local autoloadLabel = configSection:Label({Text = "Autoload Config: None"})
+				local autoloadLabel
 
 				configSection:Button({
-					Name = "Set Current as Autoload",
+					Name = "Set as autoload",
 					Callback = function()
-						if not selectedConfig then 
-							WindowFunctions:Notify({ Title = "Config Manager", Description = "Please select a config first." })
-							return 
-						end
-
-						writefile(MacLib.Folder .. "/settings/autoload.txt", selectedConfig)
-						autoloadLabel:UpdateName("Autoload Config: " .. selectedConfig)
+						local name = configSelection.Value
+						writefile(MacLib.Folder .. "/settings/autoload.txt", name)
+						autoloadLabel:UpdateName("Autoload config: " .. name)
 						WindowFunctions:Notify({
-							Title = "Config Manager",
-							Description = string.format("Set %q to load automatically.", selectedConfig),
+							Title = "Interface",
+							Description = string.format("Set %q as autoload", name),
 						})
 					end,
 				})
 
-				configSection:Button({
-					Name = "Clear Autoload",
-					Callback = function()
-						local path = MacLib.Folder .. "/settings/autoload.txt"
-						if isfile(path) then
-							delfile(path)
-							autoloadLabel:UpdateName("Autoload Config: None")
-							WindowFunctions:Notify({
-								Title = "Config Manager",
-								Description = "Cleared autoload configuration.",
-							})
-						end
-					end,
-				})
-
 				configSection:Toggle({
-					Name = "Auto Save Configuration",
-					Default = MacLib.AutoSaveEnabled,
+					Name = "Auto Save Config",
+					Default = true,
 					Callback = function(state)
 						MacLib.AutoSaveEnabled = state
 						if state and MacLib.CurrentConfigName == "" then
@@ -5496,27 +5419,26 @@ end
 					end
 				})
 
+				autoloadLabel = configSection:Label({Text = "Autoload config: None"})
+
 				if isfile(MacLib.Folder .. "/settings/autoload.txt") then
 					local name = readfile(MacLib.Folder .. "/settings/autoload.txt")
-					autoloadLabel:UpdateName("Autoload Config: " .. name)
+					autoloadLabel:UpdateName("Autoload config: " .. name)
 				end
-
-				configSection:Divider()
-
-				-- --- [ GROUP 3: BUILT-IN PRESETS ] ---
-				configSection:Header({ Text = "Built-in Presets" })
-				
-				configSection:Dropdown({
-					Name = "Load Default Presets",
-					Options = {"Legit Farm", "Max Performance", "Full Features"}, 
-					Callback = function(presetName)
-						WindowFunctions:Notify({
-							Title = "Presets Manager",
-							Description = "Applied Preset: " .. presetName
-						})
-					end
-				})
 			end
+
+			tabs[tabSwitcher] = {
+				tabContent = elements1,
+				tabStroke = tabSwitcherUIStroke,
+				switcherImage = tabImage,
+				switcherName = tabSwitcherName,
+			}
+
+			return TabFunctions
+		end
+
+		return SectionFunctions
+	end
 
 	function WindowFunctions:Notify(Settings)
 		local NotificationFunctions = {}
