@@ -1632,6 +1632,8 @@ function MacLib:Window(Settings)
 
 			function TabFunctions:Section(Settings)
 				local SectionFunctions = {}
+				local isExpanded = false
+
 				local section = Instance.new("Frame")
 				section.Name = "Section"
 				section.AutomaticSize = Enum.AutomaticSize.Y
@@ -1670,7 +1672,71 @@ function MacLib:Window(Settings)
 				sectionUIPadding.PaddingTop = UDim.new(0, 22)
 				sectionUIPadding.Parent = section
 				
-			
+				local arrowIcon = Instance.new("ImageLabel")
+				arrowIcon.Name = "ArrowIcon"
+				arrowIcon.AnchorPoint = Vector2.new(1, 0)
+				arrowIcon.Position = UDim2.new(1, 0, 0, 0)
+				arrowIcon.Size = UDim2.fromOffset(14, 14)
+				arrowIcon.BackgroundTransparency = 1
+				arrowIcon.Image = "rbxassetid://10709791437" 
+				arrowIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+				arrowIcon.ImageTransparency = 0.5
+				arrowIcon.Rotation = 90 
+				arrowIcon.ZIndex = 5
+				arrowIcon.Parent = section
+
+				local toggleButton = Instance.new("TextButton")
+				toggleButton.Name = "ToggleButton"
+				toggleButton.Size = UDim2.new(1, 0, 0, 30) 
+				toggleButton.BackgroundTransparency = 1
+				toggleButton.Text = ""
+				toggleButton.ZIndex = 6
+				toggleButton.Parent = section
+
+				local function ToggleSection()
+					isExpanded = not isExpanded
+					
+					-- Animation xoay mũi tên
+					Tween(arrowIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {
+						Rotation = isExpanded and 90 or 0
+					}):Play()
+
+					if isExpanded then
+						section.AutomaticSize = Enum.AutomaticSize.Y
+						-- Hiện các thành phần (ngoại trừ Header/Toggle/Arrow)
+						for _, child in ipairs(section:GetChildren()) do
+							if not child:IsA("UIComponent") and child.Name ~= "ArrowIcon" and child.Name ~= "ToggleButton" then
+								child.Visible = true
+							end
+						end
+					else
+						section.AutomaticSize = Enum.AutomaticSize.None
+						-- Thu nhỏ về chiều cao của Header (khoảng 45px tính cả padding)
+						Tween(section, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {
+							Size = UDim2.new(1, 0, 0, 45)
+						}):Play()
+
+						task.delay(0.1, function()
+							if not isExpanded then
+								for _, child in ipairs(section:GetChildren()) do
+									if not child:IsA("UIComponent") and child.Name ~= "ArrowIcon" and child.Name ~= "ToggleButton" and not (child:IsA("Frame") and child:FindFirstChild("HeaderText")) then
+										-- Giữ Header hiện diện, ẩn các thứ khác
+										local isHeader = false
+										for _, grandChild in ipairs(child:GetChildren()) do
+											if grandChild.Name == "HeaderText" then isHeader = true break end
+										end
+										
+										if not isHeader then
+											child.Visible = false
+										end
+									end
+								end
+							end
+						end)
+					end
+				end
+
+				toggleButton.MouseButton1Click:Connect(ToggleSection)
 
 				function SectionFunctions:Button(Settings, Flag)
 					local ButtonFunctions = {Settings = Settings}
@@ -4724,7 +4790,7 @@ function MacLib:Window(Settings)
 				SelectCurrentTab()
 			end
 
-function TabFunctions:InsertUISettingsSection(Side)
+			function TabFunctions:InsertUISettingsSection(Side)
 				local UISection = TabFunctions:Section({ 
 					Name = "Advanced Settings", 
 					Side = Side or "Right" 
