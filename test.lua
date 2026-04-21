@@ -986,8 +986,113 @@ function MacLib:Window(Settings)
 	currentTab.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	currentTab.BorderSizePixel = 0
 	currentTab.Position = UDim2.fromScale(0, 0.5)
-	currentTab.Size = UDim2.fromScale(0.9, 0)
+	currentTab.Size = UDim2.new(1, -220, 0, 0)
 	currentTab.Parent = elements
+
+	-- // BẮT ĐẦU THÊM GLOBAL SEARCH VÀO TOPBAR //
+	local searchContainer = Instance.new("Frame")
+	searchContainer.Name = "GlobalSearch"
+	searchContainer.AnchorPoint = Vector2.new(1, 0.5)
+	searchContainer.Position = UDim2.new(1, -40, 0.5, 0) -- Đặt ngay bên trái nút di chuyển (MoveIcon)
+	searchContainer.Size = UDim2.new(0, 160, 0, 30)
+	searchContainer.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	searchContainer.BackgroundTransparency = 0.5
+	searchContainer.Parent = elements
+
+	Instance.new("UICorner", searchContainer).CornerRadius = UDim.new(0, 6)
+	
+	local searchStroke = Instance.new("UIStroke", searchContainer)
+	searchStroke.Color = Color3.fromRGB(255, 255, 255)
+	searchStroke.Transparency = 0.9
+
+	local searchIconUI = Instance.new("ImageLabel")
+	searchIconUI.Image = assets.searchIcon
+	searchIconUI.BackgroundTransparency = 1
+	searchIconUI.Size = UDim2.fromOffset(14, 14)
+	searchIconUI.Position = UDim2.new(0, 8, 0.5, -7)
+	searchIconUI.ImageTransparency = 0.5
+	searchIconUI.Parent = searchContainer
+
+	local globalSearchBox = Instance.new("TextBox")
+	globalSearchBox.Name = "SearchBox"
+	globalSearchBox.BackgroundTransparency = 1
+	globalSearchBox.Position = UDim2.new(0, 30, 0, 0)
+	globalSearchBox.Size = UDim2.new(1, -35, 1, 0)
+	globalSearchBox.FontFace = Font.new(assets.interFont, Enum.FontWeight.Medium)
+	globalSearchBox.Text = ""
+	globalSearchBox.PlaceholderText = "Search..."
+	globalSearchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	globalSearchBox.TextTransparency = 0.2
+	globalSearchBox.TextSize = 13
+	globalSearchBox.TextXAlignment = Enum.TextXAlignment.Left
+	globalSearchBox.Parent = searchContainer
+
+	local function PerformGlobalSearch(query)
+		query = query:lower()
+		local isSearching = query ~= ""
+
+		for tabBtn, tabInfo in pairs(tabs) do
+			local tabContent = tabInfo.tabContent
+			local scrolling = tabContent:FindFirstChild("ElementsScrolling")
+			
+			if scrolling then
+				for _, column in ipairs({scrolling:FindFirstChild("Left"), scrolling:FindFirstChild("Right")}) do
+					if column then
+						for _, section in ipairs(column:GetChildren()) do
+							if section.Name == "Section" and section:IsA("Frame") then
+								local hasVisibleElement = false
+
+								for _, element in ipairs(section:GetChildren()) do
+									if element:IsA("Frame") and element.Name ~= "Header" and element.Name ~= "HeaderContainer" and not element.Name:find("UI") and element.Name ~= "Divider" and element.Name ~= "Spacer" then
+										
+										local textToSearch = ""
+										for _, desc in ipairs(element:GetDescendants()) do
+											if (desc:IsA("TextLabel") or desc:IsA("TextBox") or desc:IsA("TextButton")) and desc.Text then
+												textToSearch = textToSearch .. " " .. desc.Text
+											end
+										end
+										
+										if isSearching then
+											if string.find(textToSearch:lower(), query) then
+												element.Visible = true
+												hasVisibleElement = true
+											else
+												element.Visible = false
+											end
+										else
+											element.Visible = true
+											hasVisibleElement = true
+										end
+									end
+								end
+
+								if isSearching then
+									section.Visible = hasVisibleElement
+									section.AutomaticSize = Enum.AutomaticSize.None
+									section.AutomaticSize = Enum.AutomaticSize.Y
+								else
+									section.Visible = true
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+
+	globalSearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+		PerformGlobalSearch(globalSearchBox.Text)
+	end)
+
+	globalSearchBox.Focused:Connect(function()
+		TweenService:Create(searchStroke, TweenInfo.new(0.2), {Transparency = 0.5}):Play()
+		TweenService:Create(searchIconUI, TweenInfo.new(0.2), {ImageTransparency = 0.2}):Play()
+	end)
+	globalSearchBox.FocusLost:Connect(function()
+		TweenService:Create(searchStroke, TweenInfo.new(0.2), {Transparency = 0.9}):Play()
+		TweenService:Create(searchIconUI, TweenInfo.new(0.2), {ImageTransparency = 0.5}):Play()
+	end)
 
 	elements.Parent = topbar
 
@@ -5078,6 +5183,7 @@ function MacLib:Window(Settings)
 				local inputPath = nil
 				local selectedConfig = nil
 				local autoloadLabel
+				local activeLabel
 				
 				local function setActiveConfig(name)
 					MacLib.CurrentConfigName = name
@@ -5882,14 +5988,16 @@ function MacLib:Window(Settings)
 	local ClassParser = {
 		["Toggle"] = {
 			Save = function(Flag, data)
+				local currentState = data:GetState()
+				if currentState == nil then currentState = false end
 				return {
 					type = "Toggle", 
 					flag = Flag, 
-					state = data.State or false
+					state = currentState
 				}
 			end,
 			Load = function(Flag, data)
-				if MacLib.Options[Flag] and data.state then
+				if MacLib.Options[Flag] and data.state ~= nil then
 					MacLib.Options[Flag]:UpdateState(data.state)
 				end
 			end
@@ -5903,7 +6011,7 @@ function MacLib:Window(Settings)
 				}
 			end,
 			Load = function(Flag, data)
-				if MacLib.Options[Flag] and data.value then
+				if MacLib.Options[Flag] and data.value ~= nil then
 					MacLib.Options[Flag]:UpdateValue(data.value)
 				end
 			end
@@ -5917,7 +6025,7 @@ function MacLib:Window(Settings)
 				}
 			end,
 			Load = function(Flag, data)
-				if MacLib.Options[Flag] and data.text and type(data.text) == "string" then
+				if MacLib.Options[Flag] and data.text ~= nil and type(data.text) == "string" then
 					MacLib.Options[Flag]:UpdateText(data.text)
 				end
 			end
@@ -5931,7 +6039,7 @@ function MacLib:Window(Settings)
 				}
 			end,
 			Load = function(Flag, data)
-				if MacLib.Options[Flag] and data.bind then
+				if MacLib.Options[Flag] and data.bind ~= nil then
 					MacLib.Options[Flag]:Bind(Enum.KeyCode[data.bind])
 				end
 			end
@@ -5945,7 +6053,7 @@ function MacLib:Window(Settings)
 				}
 			end,
 			Load = function(Flag, data)
-				if MacLib.Options[Flag] and data.value then
+				if MacLib.Options[Flag] and data.value ~= nil then
 					MacLib.Options[Flag]:UpdateSelection(data.value)
 				end
 			end
@@ -5955,7 +6063,6 @@ function MacLib:Window(Settings)
 				local function Color3ToHex(color)
 					return string.format("#%02X%02X%02X", math.floor(color.R * 255), math.floor(color.G * 255), math.floor(color.B * 255))
 				end
-
 				return {
 					type = "Colorpicker", 
 					flag = Flag, 
@@ -5970,10 +6077,9 @@ function MacLib:Window(Settings)
 					local b = tonumber(hex:sub(6, 7), 16) / 255
 					return Color3.new(r, g, b)
 				end
-
-				if MacLib.Options[Flag] and data.color then
+				if MacLib.Options[Flag] and data.color ~= nil then
 					MacLib.Options[Flag]:SetColor(HexToColor3(data.color)) 
-					if data.alpha then
+					if data.alpha ~= nil then
 						MacLib.Options[Flag]:SetAlpha(data.alpha)
 					end
 				end
@@ -6115,7 +6221,85 @@ function MacLib:Window(Settings)
 		table.insert(assetList, assetId)
 	end
 
-	ContentProvider:PreloadAsync(assetList)
+	if UserInputService.TouchEnabled then
+		local mobileToggle = Instance.new("ImageButton")
+		mobileToggle.Name = "MobileToggle"
+		mobileToggle.Size = UDim2.fromOffset(45, 45)
+		mobileToggle.Position = UDim2.new(0.5, -22, 0, 15) 
+		mobileToggle.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+		mobileToggle.BackgroundTransparency = 0.2
+		mobileToggle.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		mobileToggle.BorderSizePixel = 0
+		mobileToggle.Image = "rbxassetid://103660255446080"
+		mobileToggle.ImageColor3 = Color3.fromRGB(255, 255, 255)
+		mobileToggle.Parent = macLib 
+		mobileToggle.ZIndex = 99999
+
+		local toggleCorner = Instance.new("UICorner")
+		toggleCorner.CornerRadius = UDim.new(1, 0)
+		toggleCorner.Parent = mobileToggle
+
+		local toggleStroke = Instance.new("UIStroke")
+		toggleStroke.Color = Color3.fromRGB(255, 255, 255)
+		toggleStroke.Transparency = 0.8
+		toggleStroke.Thickness = 1.5
+		toggleStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		toggleStroke.Parent = mobileToggle
+
+		local isUIOpen = true
+		mobileToggle.MouseButton1Click:Connect(function()
+			if not dragging then 
+				isUIOpen = not isUIOpen
+				base.Visible = isUIOpen
+				
+				Tween(mobileToggle, TweenInfo.new(0.1, Enum.EasingStyle.Sine), {
+					Size = UDim2.fromOffset(40, 40)
+				}):Play()
+				task.wait(0.1)
+				Tween(mobileToggle, TweenInfo.new(0.1, Enum.EasingStyle.Sine), {
+					Size = UDim2.fromOffset(45, 45)
+				}):Play()
+			end
+		end)
+
+		local draggingToggle = false
+		local dragInputToggle
+		local dragStartToggle
+		local startPosToggle
+
+		mobileToggle.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				draggingToggle = true
+				dragStartToggle = input.Position
+				startPosToggle = mobileToggle.Position
+
+				input.Changed:Connect(function()
+					if input.UserInputState == Enum.UserInputState.End then
+						draggingToggle = false
+					end
+				end)
+			end
+		end)
+
+		mobileToggle.InputChanged:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+				dragInputToggle = input
+			end
+		end)
+
+		UserInputService.InputChanged:Connect(function(input)
+			if input == dragInputToggle and draggingToggle then
+				local delta = input.Position - dragStartToggle
+				mobileToggle.Position = UDim2.new(
+					startPosToggle.X.Scale, 
+					startPosToggle.X.Offset + delta.X, 
+					startPosToggle.Y.Scale, 
+					startPosToggle.Y.Offset + delta.Y
+				)
+			end
+		end)
+	end
+
 	macLib.Enabled = true
 	windowState = true
 
