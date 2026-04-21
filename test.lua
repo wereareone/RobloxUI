@@ -4393,7 +4393,7 @@ function MacLib:Window(Settings)
 					return ColorpickerFunctions
 				end
 
-				function SectionFunctions:Header(Settings, Flag)
+
 		function SectionFunctions:Header(Settings, Flag)
     local HeaderFunctions = {Settings = Settings}
     local isExpanded = false -- Mặc định là ẩn nội dung
