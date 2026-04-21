@@ -5186,8 +5186,11 @@ function MacLib:Window(Settings)
 				local activeLabel
 				
 				local function setActiveConfig(name)
-					MacLib.CurrentConfigName = name
-					activeLabel:UpdateName("Active Config: " .. name)
+					MacLib.CurrentConfigName = name or ""
+					
+					if activeLabel then
+						activeLabel:UpdateName("Active Config: " .. tostring(name or "None"))
+					end
 				end
 				
 				configSection:Input({
