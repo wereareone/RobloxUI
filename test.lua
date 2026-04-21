@@ -1632,107 +1632,101 @@ function MacLib:Window(Settings)
 
 			function TabFunctions:Section(Settings)
 				local SectionFunctions = {}
-				local isExpanded = false
-
+				local isExpanded = false 
+				
 				local section = Instance.new("Frame")
 				section.Name = "Section"
 				section.AutomaticSize = Enum.AutomaticSize.Y
 				MacLib:AddThemeObject(section, "BackgroundColor3", "SectionColor")
 				section.BackgroundTransparency = 0.98
-				section.BorderColor3 = Color3.fromRGB(0, 0, 0)
 				section.BorderSizePixel = 0
-				section.Position = UDim2.fromScale(0, 6.78e-08)
 				section.Size = UDim2.fromScale(1, 0)
-				section.ClipsDescendants = true
+				section.ClipsDescendants = true 
 				section.Parent = Settings.Side == "Left" and left or right
 				SectionFunctions.Instance = section
 
-				local sectionUICorner = Instance.new("UICorner")
-				sectionUICorner.Name = "SectionUICorner"
-				sectionUICorner.Parent = section
+				Instance.new("UICorner", section).CornerRadius = UDim.new(0, 12)
 
-				local sectionUIStroke = Instance.new("UIStroke")
-				sectionUIStroke.Name = "SectionUIStroke"
+				local sectionUIStroke = Instance.new("UIStroke", section)
 				sectionUIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 				sectionUIStroke.Color = Color3.fromRGB(255, 255, 255)
 				sectionUIStroke.Transparency = 0.95
-				sectionUIStroke.Parent = section
 
-				local sectionUIListLayout = Instance.new("UIListLayout")
-				sectionUIListLayout.Name = "SectionUIListLayout"
+				local sectionUIListLayout = Instance.new("UIListLayout", section)
 				sectionUIListLayout.Padding = UDim.new(0, 10)
 				sectionUIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-				sectionUIListLayout.Parent = section
 
-				local sectionUIPadding = Instance.new("UIPadding")
-				sectionUIPadding.Name = "SectionUIPadding"
-				sectionUIPadding.PaddingBottom = UDim.new(0, 20)
-				sectionUIPadding.PaddingLeft = UDim.new(0, 20)
+				local sectionUIPadding = Instance.new("UIPadding", section)
+				sectionUIPadding.PaddingBottom = UDim.new(0, 15)
+				sectionUIPadding.PaddingLeft = UDim.new(0, 18)
 				sectionUIPadding.PaddingRight = UDim.new(0, 18)
-				sectionUIPadding.PaddingTop = UDim.new(0, 22)
-				sectionUIPadding.Parent = section
-				
+				sectionUIPadding.PaddingTop = UDim.new(0, 15)
+
+				local headerContainer = Instance.new("Frame")
+				headerContainer.Name = "HeaderContainer"
+				headerContainer.BackgroundTransparency = 1
+				headerContainer.Size = UDim2.new(1, 0, 0, 25)
+				headerContainer.LayoutOrder = -10 
+				headerContainer.Parent = section
+
+				local headerLabel = Instance.new("TextLabel")
+				headerLabel.Name = "HeaderText"
+				headerLabel.FontFace = Font.new(assets.interFont, Enum.FontWeight.SemiBold)
+				headerLabel.Text = Settings.Name or "Section"
+				headerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+				headerLabel.TextSize = 15
+				headerLabel.TextTransparency = 0.3
+				headerLabel.TextXAlignment = Enum.TextXAlignment.Left
+				headerLabel.BackgroundTransparency = 1
+				headerLabel.Size = UDim2.new(1, -20, 1, 0)
+				headerLabel.Parent = headerContainer
+
 				local arrowIcon = Instance.new("ImageLabel")
 				arrowIcon.Name = "ArrowIcon"
-				arrowIcon.AnchorPoint = Vector2.new(1, 0)
-				arrowIcon.Position = UDim2.new(1, 0, 0, 0)
-				arrowIcon.Size = UDim2.fromOffset(14, 14)
+				arrowIcon.AnchorPoint = Vector2.new(1, 0.5)
+				arrowIcon.Position = UDim2.new(1, 0, 0.5, 0)
+				arrowIcon.Size = UDim2.fromOffset(12, 12)
 				arrowIcon.BackgroundTransparency = 1
-				arrowIcon.Image = "rbxassetid://10709791437" 
+				arrowIcon.Image = assets.dropdown 
 				arrowIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
 				arrowIcon.ImageTransparency = 0.5
-				arrowIcon.Rotation = 90 
-				arrowIcon.ZIndex = 5
-				arrowIcon.Parent = section
+				arrowIcon.Rotation = 0 
+				arrowIcon.Parent = headerContainer
 
 				local toggleButton = Instance.new("TextButton")
 				toggleButton.Name = "ToggleButton"
-				toggleButton.Size = UDim2.new(1, 0, 0, 30) 
+				toggleButton.Size = UDim2.new(1, 40, 1, 30) 
+				toggleButton.Position = UDim2.new(0, -20, 0, -15)
 				toggleButton.BackgroundTransparency = 1
 				toggleButton.Text = ""
-				toggleButton.ZIndex = 6
-				toggleButton.Parent = section
+				toggleButton.ZIndex = 10
+				toggleButton.Parent = headerContainer
 
 				local function ToggleSection()
 					isExpanded = not isExpanded
 					
-					-- Animation xoay mũi tên
 					Tween(arrowIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {
-						Rotation = isExpanded and 90 or 0
+						Rotation = isExpanded and 0 or -90
 					}):Play()
 
 					if isExpanded then
 						section.AutomaticSize = Enum.AutomaticSize.Y
-						-- Hiện các thành phần (ngoại trừ Header/Toggle/Arrow)
 						for _, child in ipairs(section:GetChildren()) do
-							if not child:IsA("UIComponent") and child.Name ~= "ArrowIcon" and child.Name ~= "ToggleButton" then
+							if not child:IsA("UIComponent") and child.Name ~= "HeaderContainer" then
 								child.Visible = true
 							end
 						end
 					else
 						section.AutomaticSize = Enum.AutomaticSize.None
-						-- Thu nhỏ về chiều cao của Header (khoảng 45px tính cả padding)
 						Tween(section, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {
 							Size = UDim2.new(1, 0, 0, 45)
 						}):Play()
 
-						task.delay(0.1, function()
-							if not isExpanded then
-								for _, child in ipairs(section:GetChildren()) do
-									if not child:IsA("UIComponent") and child.Name ~= "ArrowIcon" and child.Name ~= "ToggleButton" and not (child:IsA("Frame") and child:FindFirstChild("HeaderText")) then
-										-- Giữ Header hiện diện, ẩn các thứ khác
-										local isHeader = false
-										for _, grandChild in ipairs(child:GetChildren()) do
-											if grandChild.Name == "HeaderText" then isHeader = true break end
-										end
-										
-										if not isHeader then
-											child.Visible = false
-										end
-									end
-								end
+						for _, child in ipairs(section:GetChildren()) do
+							if not child:IsA("UIComponent") and child.Name ~= "HeaderContainer" then
+								child.Visible = false
 							end
-						end)
+						end
 					end
 				end
 
