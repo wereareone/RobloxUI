@@ -1632,7 +1632,7 @@ function MacLib:Window(Settings)
 
 			function TabFunctions:Section(Settings)
 				local SectionFunctions = {}
-				local isExpanded = false 
+				local isExpanded = true -- Mặc định là mở
 				
 				local section = Instance.new("Frame")
 				section.Name = "Section"
@@ -1662,55 +1662,62 @@ function MacLib:Window(Settings)
 				sectionUIPadding.PaddingRight = UDim.new(0, 18)
 				sectionUIPadding.PaddingTop = UDim.new(0, 15)
 
+				-- // HEADER CONTAINER (Chứa tiêu đề và mũi tên)
 				local headerContainer = Instance.new("Frame")
 				headerContainer.Name = "HeaderContainer"
 				headerContainer.BackgroundTransparency = 1
-				headerContainer.Size = UDim2.new(1, 0, 0, 25)
-				headerContainer.LayoutOrder = -10 
+				headerContainer.Size = UDim2.new(1, 0, 0, 22)
+				headerContainer.LayoutOrder = -100 
 				headerContainer.Parent = section
+
+				local headerUIList = Instance.new("UIListLayout", headerContainer)
+				headerUIList.FillDirection = Enum.FillDirection.Horizontal
+				headerUIList.VerticalAlignment = Enum.VerticalAlignment.Center
+				headerUIList.Padding = UDim.new(0, 8) -- Khoảng cách giữa Text và Mũi tên
+
+				local arrowIcon = Instance.new("ImageLabel")
+				arrowIcon.Name = "ArrowIcon"
+				arrowIcon.Size = UDim2.fromOffset(10, 10) -- Nhỏ lại cho tinh tế
+				arrowIcon.BackgroundTransparency = 1
+				arrowIcon.Image = assets.dropdown 
+				arrowIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+				arrowIcon.ImageTransparency = 0.5
+				arrowIcon.Rotation = 0 -- 0 là hướng xuống (Expanded)
+				arrowIcon.Parent = headerContainer
 
 				local headerLabel = Instance.new("TextLabel")
 				headerLabel.Name = "HeaderText"
 				headerLabel.FontFace = Font.new(assets.interFont, Enum.FontWeight.SemiBold)
 				headerLabel.Text = Settings.Name or "Section"
 				headerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-				headerLabel.TextSize = 15
+				headerLabel.TextSize = 14
 				headerLabel.TextTransparency = 0.3
 				headerLabel.TextXAlignment = Enum.TextXAlignment.Left
 				headerLabel.BackgroundTransparency = 1
-				headerLabel.Size = UDim2.new(1, -20, 1, 0)
+				headerLabel.AutomaticSize = Enum.AutomaticSize.XY
 				headerLabel.Parent = headerContainer
 
-				local arrowIcon = Instance.new("ImageLabel")
-				arrowIcon.Name = "ArrowIcon"
-				arrowIcon.AnchorPoint = Vector2.new(1, 0.5)
-				arrowIcon.Position = UDim2.new(1, 0, 0.5, 0)
-				arrowIcon.Size = UDim2.fromOffset(12, 12)
-				arrowIcon.BackgroundTransparency = 1
-				arrowIcon.Image = assets.dropdown 
-				arrowIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
-				arrowIcon.ImageTransparency = 0.5
-				arrowIcon.Rotation = 0 
-				arrowIcon.Parent = headerContainer
-
+				-- Nút bấm tàng hình đè lên toàn bộ vùng Header
 				local toggleButton = Instance.new("TextButton")
 				toggleButton.Name = "ToggleButton"
 				toggleButton.Size = UDim2.new(1, 40, 1, 30) 
-				toggleButton.Position = UDim2.new(0, -20, 0, -15)
+				toggleButton.Position = UDim2.new(0, -20, 0, -15) -- Bù trừ Padding của Section
 				toggleButton.BackgroundTransparency = 1
 				toggleButton.Text = ""
-				toggleButton.ZIndex = 10
+				toggleButton.ZIndex = 100 -- Đảm bảo luôn nằm trên cùng để click được
 				toggleButton.Parent = headerContainer
 
 				local function ToggleSection()
 					isExpanded = not isExpanded
 					
-					Tween(arrowIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {
+					-- Animation mũi tên
+					Tween(arrowIcon, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {
 						Rotation = isExpanded and 0 or -90
 					}):Play()
 
 					if isExpanded then
 						section.AutomaticSize = Enum.AutomaticSize.Y
+						-- Hiện lại tất cả
 						for _, child in ipairs(section:GetChildren()) do
 							if not child:IsA("UIComponent") and child.Name ~= "HeaderContainer" then
 								child.Visible = true
@@ -1718,10 +1725,12 @@ function MacLib:Window(Settings)
 						end
 					else
 						section.AutomaticSize = Enum.AutomaticSize.None
-						Tween(section, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {
-							Size = UDim2.new(1, 0, 0, 45)
+						-- Thu nhỏ khung section về chiều cao header (khoảng 40-45px bao gồm padding)
+						Tween(section, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {
+							Size = UDim2.new(1, 0, 0, 42)
 						}):Play()
 
+						-- Ẩn các con (Body)
 						for _, child in ipairs(section:GetChildren()) do
 							if not child:IsA("UIComponent") and child.Name ~= "HeaderContainer" then
 								child.Visible = false
