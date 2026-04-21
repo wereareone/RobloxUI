@@ -1631,113 +1631,46 @@ function MacLib:Window(Settings)
 			elementsScrolling.Parent = elements1
 
 			function TabFunctions:Section(Settings)
-    local SectionFunctions = {}
-    local isExpanded = false -- Mặc định là ĐÓNG (Ẩn body)
-    
-    local section = Instance.new("Frame")
-    section.Name = "Section"
-    section.AutomaticSize = Enum.AutomaticSize.None -- Tắt tự động giãn để set size mặc định khi đóng
-    MacLib:AddThemeObject(section, "BackgroundColor3", "SectionColor")
-    section.BackgroundTransparency = 0.98
-    section.BorderSizePixel = 0
-    section.Size = UDim2.new(1, 0, 0, 42) -- Chiều cao mặc định khi đóng
-    section.ClipsDescendants = true 
-    section.Parent = Settings.Side == "Left" and left or right
-    SectionFunctions.Instance = section
+				local SectionFunctions = {}
+				local section = Instance.new("Frame")
+				section.Name = "Section"
+				section.AutomaticSize = Enum.AutomaticSize.Y
+				MacLib:AddThemeObject(section, "BackgroundColor3", "SectionColor")
+				section.BackgroundTransparency = 0.98
+				section.BorderColor3 = Color3.fromRGB(0, 0, 0)
+				section.BorderSizePixel = 0
+				section.Position = UDim2.fromScale(0, 6.78e-08)
+				section.Size = UDim2.fromScale(1, 0)
+				section.ClipsDescendants = true
+				section.Parent = Settings.Side == "Left" and left or right
+				SectionFunctions.Instance = section
 
-    Instance.new("UICorner", section).CornerRadius = UDim.new(0, 12)
+				local sectionUICorner = Instance.new("UICorner")
+				sectionUICorner.Name = "SectionUICorner"
+				sectionUICorner.Parent = section
 
-    local sectionUIStroke = Instance.new("UIStroke", section)
-    sectionUIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    sectionUIStroke.Color = Color3.fromRGB(255, 255, 255)
-    sectionUIStroke.Transparency = 0.95
+				local sectionUIStroke = Instance.new("UIStroke")
+				sectionUIStroke.Name = "SectionUIStroke"
+				sectionUIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+				sectionUIStroke.Color = Color3.fromRGB(255, 255, 255)
+				sectionUIStroke.Transparency = 0.95
+				sectionUIStroke.Parent = section
 
-    local sectionUIListLayout = Instance.new("UIListLayout", section)
-    sectionUIListLayout.Padding = UDim.new(0, 10)
-    sectionUIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+				local sectionUIListLayout = Instance.new("UIListLayout")
+				sectionUIListLayout.Name = "SectionUIListLayout"
+				sectionUIListLayout.Padding = UDim.new(0, 10)
+				sectionUIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+				sectionUIListLayout.Parent = section
 
-    local sectionUIPadding = Instance.new("UIPadding", section)
-    sectionUIPadding.PaddingBottom = UDim.new(0, 15)
-    sectionUIPadding.PaddingLeft = UDim.new(0, 18)
-    sectionUIPadding.PaddingRight = UDim.new(0, 18)
-    sectionUIPadding.PaddingTop = UDim.new(0, 15)
-
-    -- // HEADER CONTAINER (Nơi chứa Text và Icon cạnh nhau)
-    local headerContainer = Instance.new("Frame")
-    headerContainer.Name = "HeaderContainer"
-    headerContainer.BackgroundTransparency = 1
-    headerContainer.Size = UDim2.new(1, 0, 0, 22)
-    headerContainer.LayoutOrder = -100 
-    headerContainer.Parent = section
-
-    local headerUIList = Instance.new("UIListLayout", headerContainer)
-    headerUIList.FillDirection = Enum.FillDirection.Horizontal
-    headerUIList.VerticalAlignment = Enum.VerticalAlignment.Center
-    headerUIList.Padding = UDim.new(0, 8) -- Khoảng cách giữa chữ và icon
-
-    local headerLabel = Instance.new("TextLabel")
-    headerLabel.Name = "HeaderText"
-    headerLabel.FontFace = Font.new(assets.interFont, Enum.FontWeight.SemiBold)
-    headerLabel.Text = Settings.Name or "Section"
-    headerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    headerLabel.TextSize = 14
-    headerLabel.TextTransparency = 0.3
-    headerLabel.TextXAlignment = Enum.TextXAlignment.Left
-    headerLabel.BackgroundTransparency = 1
-    headerLabel.AutomaticSize = Enum.AutomaticSize.XY
-    headerLabel.Parent = headerContainer
-
-    local arrowIcon = Instance.new("ImageLabel")
-    arrowIcon.Name = "ArrowIcon"
-    arrowIcon.Size = UDim2.fromOffset(12, 12)
-    arrowIcon.BackgroundTransparency = 1
-    arrowIcon.Image = "rbxassetid://119090403860693" -- Icon bạn yêu cầu
-    arrowIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
-    arrowIcon.ImageTransparency = 0.5
-    arrowIcon.Rotation = -90 -- Mặc định xoay ngang (trạng thái đang đóng)
-    arrowIcon.Parent = headerContainer
-
-    -- Nút bấm phủ toàn bộ vùng tiêu đề để kích hoạt
-    local toggleButton = Instance.new("TextButton")
-    toggleButton.Name = "ToggleButton"
-    toggleButton.Size = UDim2.new(1, 40, 1, 30) 
-    toggleButton.Position = UDim2.new(0, -20, 0, -15)
-    toggleButton.BackgroundTransparency = 1
-    toggleButton.Text = ""
-    toggleButton.ZIndex = 100
-    toggleButton.Parent = headerContainer
-
-    local function ToggleSection()
-        isExpanded = not isExpanded
-        
-        -- Animation xoay icon: Mở (0 độ), Đóng (-90 độ)
-        Tween(arrowIcon, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {
-            Rotation = isExpanded and 0 or -90
-        }):Play()
-
-        if isExpanded then
-            section.AutomaticSize = Enum.AutomaticSize.Y
-            for _, child in ipairs(section:GetChildren()) do
-                if not child:IsA("UIComponent") and child.Name ~= "HeaderContainer" then
-                    child.Visible = true
-                end
-            end
-        else
-            section.AutomaticSize = Enum.AutomaticSize.None
-            Tween(section, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {
-                Size = UDim2.new(1, 0, 0, 42)
-            }):Play()
-
-            -- Ẩn nội dung sau khi bắt đầu thu nhỏ
-            for _, child in ipairs(section:GetChildren()) do
-                if not child:IsA("UIComponent") and child.Name ~= "HeaderContainer" then
-                    child.Visible = false
-                end
-            end
-        end
-    end
-
-    toggleButton.MouseButton1Click:Connect(ToggleSection)
+				local sectionUIPadding = Instance.new("UIPadding")
+				sectionUIPadding.Name = "SectionUIPadding"
+				sectionUIPadding.PaddingBottom = UDim.new(0, 20)
+				sectionUIPadding.PaddingLeft = UDim.new(0, 20)
+				sectionUIPadding.PaddingRight = UDim.new(0, 18)
+				sectionUIPadding.PaddingTop = UDim.new(0, 22)
+				sectionUIPadding.Parent = section
+				
+			
 
 				function SectionFunctions:Button(Settings, Flag)
 					local ButtonFunctions = {Settings = Settings}
@@ -4461,58 +4394,148 @@ function MacLib:Window(Settings)
 				end
 
 				function SectionFunctions:Header(Settings, Flag)
-					local HeaderFunctions = {Settings = Settings}
+    local HeaderFunctions = {Settings = Settings}
+    local isExpanded = false -- Mặc định là ẨN
 
-					local header = Instance.new("Frame")
-					header.Name = "Header"
-					header.AutomaticSize = Enum.AutomaticSize.Y
-					header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-					header.BackgroundTransparency = 1
-					header.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					header.BorderSizePixel = 0
-					header.LayoutOrder = 0
-					header.Size = UDim2.fromScale(1, 0)
-					header.Parent = section
+    local header = Instance.new("Frame")
+    header.Name = "Header"
+    header.AutomaticSize = Enum.AutomaticSize.Y
+    header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    header.BackgroundTransparency = 1
+    header.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    header.BorderSizePixel = 0
+    header.LayoutOrder = 0
+    header.Size = UDim2.fromScale(1, 0)
+    header.Parent = section
 
-					local uIPadding = Instance.new("UIPadding")
-					uIPadding.Name = "UIPadding"
-					uIPadding.PaddingBottom = UDim.new(0, 5)
-					uIPadding.Parent = header
+    local uIPadding = Instance.new("UIPadding")
+    uIPadding.Name = "UIPadding"
+    uIPadding.PaddingBottom = UDim.new(0, 5)
+    uIPadding.Parent = header
 
-					local headerText = Instance.new("TextLabel")
-					headerText.Name = "HeaderText"
-					headerText.FontFace = Font.new(
-						assets.interFont,
-						Enum.FontWeight.Medium,
-						Enum.FontStyle.Normal
-					)
-					headerText.RichText = true
-					headerText.Text = HeaderFunctions.Settings.Text or HeaderFunctions.Settings.Name
-					headerText.TextColor3 = Color3.fromRGB(255, 255, 255)
-					headerText.TextSize = 16
-					headerText.TextTransparency = 0.3
-					headerText.TextWrapped = true
-					headerText.TextXAlignment = Enum.TextXAlignment.Left
-					headerText.AutomaticSize = Enum.AutomaticSize.Y
-					headerText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-					headerText.BackgroundTransparency = 1
-					headerText.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					headerText.BorderSizePixel = 0
-					headerText.Size = UDim2.fromScale(1, 0)
-					headerText.Parent = header
+    -- // CONTAINER CHỨA TEXT VÀ ICON NẰM NGANG
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Name = "ContentFrame"
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.Size = UDim2.fromScale(1, 0)
+    contentFrame.AutomaticSize = Enum.AutomaticSize.Y
+    contentFrame.Parent = header
 
-					function HeaderFunctions:UpdateName(New)
-						headerText.Text = New
-					end
-					function HeaderFunctions:SetVisibility(State)
-						header.Visible = State
-					end
+    local contentUIList = Instance.new("UIListLayout")
+    contentUIList.FillDirection = Enum.FillDirection.Horizontal
+    contentUIList.VerticalAlignment = Enum.VerticalAlignment.Center
+    contentUIList.Padding = UDim.new(0, 8) -- Khoảng cách giữa chữ và icon
+    contentUIList.Parent = contentFrame
 
-					if Flag then
-						MacLib.Options[Flag] = HeaderFunctions
-					end
-					return HeaderFunctions
-				end
+    local headerText = Instance.new("TextLabel")
+    headerText.Name = "HeaderText"
+    headerText.FontFace = Font.new(
+        assets.interFont,
+        Enum.FontWeight.Medium,
+        Enum.FontStyle.Normal
+    )
+    headerText.RichText = true
+    headerText.Text = HeaderFunctions.Settings.Text or HeaderFunctions.Settings.Name
+    headerText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    headerText.TextSize = 16
+    headerText.TextTransparency = 0.3
+    headerText.TextWrapped = true
+    headerText.TextXAlignment = Enum.TextXAlignment.Left
+    headerText.AutomaticSize = Enum.AutomaticSize.XY
+    headerText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    headerText.BackgroundTransparency = 1
+    headerText.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    headerText.BorderSizePixel = 0
+    headerText.Parent = contentFrame
+
+    -- // THÊM ICON MŨI TÊN
+    local arrowIcon = Instance.new("ImageLabel")
+    arrowIcon.Name = "ArrowIcon"
+    arrowIcon.Size = UDim2.fromOffset(14, 14)
+    arrowIcon.BackgroundTransparency = 1
+    arrowIcon.Image = "rbxassetid://119090403860693"
+    arrowIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+    arrowIcon.ImageTransparency = 0.5
+    arrowIcon.Rotation = -90 -- Xoay -90 vì mặc định đang đóng
+    arrowIcon.Parent = contentFrame
+
+    -- // NÚT BẤM (Kích thước bằng nguyên Header để dễ click)
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Name = "ToggleButton"
+    toggleButton.Size = UDim2.fromScale(1, 1)
+    toggleButton.BackgroundTransparency = 1
+    toggleButton.Text = ""
+    toggleButton.ZIndex = 100
+    toggleButton.Parent = header
+
+    -- Hàm lấy danh sách các elements nằm ngay dưới Header này
+    local function GetElementsUnderHeader()
+        local elements = {}
+        local passedCurrentHeader = false
+
+        for _, child in ipairs(section:GetChildren()) do
+            if child:IsA("UIComponent") or child.Name == "SectionUICorner" or child.Name == "SectionUIStroke" then
+                continue
+            end
+
+            if child == header then
+                passedCurrentHeader = true
+                continue
+            end
+
+            -- Dừng việc gom nhóm nếu gặp một Header khác
+            if passedCurrentHeader and child.Name == "Header" then
+                break
+            end
+
+            if passedCurrentHeader then
+                table.insert(elements, child)
+            end
+        end
+        return elements
+    end
+
+    local function ToggleSection()
+        isExpanded = not isExpanded
+        
+        -- Animation icon mũi tên
+        Tween(arrowIcon, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {
+            Rotation = isExpanded and 0 or -90
+        }):Play()
+
+        -- Bật/tắt hiển thị các elements thuộc Header này
+        local elements = GetElementsUnderHeader()
+        for _, el in ipairs(elements) do
+            el.Visible = isExpanded
+        end
+    end
+
+    toggleButton.MouseButton1Click:Connect(ToggleSection)
+
+    -- // TỰ ĐỘNG ẨN CÁC PHẦN TỬ MỚI NẾU ĐANG ĐÓNG
+    section.ChildAdded:Connect(function(child)
+        task.defer(function()
+            if not isExpanded then
+                local elements = GetElementsUnderHeader()
+                if table.find(elements, child) then
+                    child.Visible = false
+                end
+            end
+        end)
+    end)
+
+    function HeaderFunctions:UpdateName(New)
+        headerText.Text = New
+    end
+    function HeaderFunctions:SetVisibility(State)
+        header.Visible = State
+    end
+
+    if Flag then
+        MacLib.Options[Flag] = HeaderFunctions
+    end
+    return HeaderFunctions
+end
 
 				function SectionFunctions:Label(Settings, Flag)
 					local LabelFunctions = {Settings = Settings}
