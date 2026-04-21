@@ -4471,6 +4471,7 @@ function MacLib:Window(Settings)
 						return elements
 					end
 
+					-- // LOGIC TWEEN TỐI ƯU VÀ MƯỢT MÀ NHẤT
 					local function ToggleSection()
 						if not section:FindFirstChild("SectionUIListLayout") then return end
 						isExpanded = not isExpanded
@@ -4490,6 +4491,8 @@ function MacLib:Window(Settings)
 
 							section.AutomaticSize = Enum.AutomaticSize.None
 
+							task.wait() 
+
 							local targetHeight = listLayout.AbsoluteContentSize.Y + padding.PaddingTop.Offset + padding.PaddingBottom.Offset
 
 							local expandTween = Tween(section, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
@@ -4504,7 +4507,7 @@ function MacLib:Window(Settings)
 							end)
 						else
 							section.AutomaticSize = Enum.AutomaticSize.None
-							
+
 							local collapseTween = Tween(section, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
 								Size = UDim2.new(1, 0, 0, 42)
 							})
