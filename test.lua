@@ -4395,7 +4395,8 @@ function MacLib:Window(Settings)
 
 				function SectionFunctions:Header(Settings, Flag)
 					local HeaderFunctions = {Settings = Settings}
-					local isExpanded = false 
+					local isExpanded = false
+					local CLOSED_HEIGHT = 50 
 
 					local header = Instance.new("Frame")
 					header.Name = "Header"
@@ -4413,6 +4414,9 @@ function MacLib:Window(Settings)
 					uIPadding.PaddingBottom = UDim.new(0, 5)
 					uIPadding.PaddingRight = UDim.new(0, 5)
 					uIPadding.Parent = header
+
+					section.AutomaticSize = Enum.AutomaticSize.None
+					section.Size = UDim2.new(1, 0, 0, CLOSED_HEIGHT)
 
 					local headerText = Instance.new("TextLabel")
 					headerText.Name = "HeaderText"
@@ -4433,7 +4437,7 @@ function MacLib:Window(Settings)
 					headerText.BackgroundTransparency = 1
 					headerText.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					headerText.BorderSizePixel = 0
-					headerText.Size = UDim2.new(1, -30, 0, 0) 
+					headerText.Size = UDim2.new(1, -30, 0, 0)
 					headerText.Parent = header
 
 					local arrowIcon = Instance.new("ImageLabel")
@@ -4442,7 +4446,7 @@ function MacLib:Window(Settings)
 					arrowIcon.Position = UDim2.new(1, 0, 0.5, 0)
 					arrowIcon.Size = UDim2.fromOffset(14, 14)
 					arrowIcon.BackgroundTransparency = 1
-					arrowIcon.Image = "rbxassetid://119090403860693"
+					arrowIcon.Image = "rbxassetid://129275222429257"
 					arrowIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
 					arrowIcon.ImageTransparency = 0.5
 					arrowIcon.Rotation = 0 
@@ -4471,7 +4475,6 @@ function MacLib:Window(Settings)
 						return elements
 					end
 
-					-- // LOGIC TWEEN TỐI ƯU VÀ MƯỢT MÀ NHẤT
 					local function ToggleSection()
 						if not section:FindFirstChild("SectionUIListLayout") then return end
 						isExpanded = not isExpanded
@@ -4485,39 +4488,30 @@ function MacLib:Window(Settings)
 						local padding = section.SectionUIPadding
 
 						if isExpanded then
-							for _, el in ipairs(elements) do
-								el.Visible = true
-							end
-
+							for _, el in ipairs(elements) do el.Visible = true end
 							section.AutomaticSize = Enum.AutomaticSize.None
 
 							task.wait() 
 
 							local targetHeight = listLayout.AbsoluteContentSize.Y + padding.PaddingTop.Offset + padding.PaddingBottom.Offset
-
 							local expandTween = Tween(section, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
 								Size = UDim2.new(1, 0, 0, targetHeight)
 							})
 							expandTween:Play()
 							
 							expandTween.Completed:Connect(function()
-								if isExpanded then
-									section.AutomaticSize = Enum.AutomaticSize.Y 
-								end
+								if isExpanded then section.AutomaticSize = Enum.AutomaticSize.Y end
 							end)
 						else
 							section.AutomaticSize = Enum.AutomaticSize.None
-
 							local collapseTween = Tween(section, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-								Size = UDim2.new(1, 0, 0, 42)
+								Size = UDim2.new(1, 0, 0, CLOSED_HEIGHT)
 							})
 							collapseTween:Play()
 
 							collapseTween.Completed:Connect(function()
 								if not isExpanded then
-									for _, el in ipairs(elements) do
-										el.Visible = false
-									end
+									for _, el in ipairs(elements) do el.Visible = false end
 								end
 							end)
 						end
@@ -4529,25 +4523,18 @@ function MacLib:Window(Settings)
 						task.defer(function()
 							if not isExpanded then
 								local elements = GetElementsUnderHeader()
-								if table.find(elements, child) then
-									child.Visible = false
-								end
+								if table.find(elements, child) then child.Visible = false end
 							end
 						end)
 					end)
 
-					function HeaderFunctions:UpdateName(New)
-						headerText.Text = New
-					end
-					function HeaderFunctions:SetVisibility(State)
-						header.Visible = State
-					end
+					function HeaderFunctions:UpdateName(New) headerText.Text = New end
+					function HeaderFunctions:SetVisibility(State) header.Visible = State end
 
-					if Flag then
-						MacLib.Options[Flag] = HeaderFunctions
-					end
+					if Flag then MacLib.Options[Flag] = HeaderFunctions end
 					return HeaderFunctions
 				end
+
 
 				function SectionFunctions:Label(Settings, Flag)
 					local LabelFunctions = {Settings = Settings}
