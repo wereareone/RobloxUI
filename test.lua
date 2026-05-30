@@ -61,6 +61,16 @@ local assets = {
 	sliderhead = "rbxassetid://18772834246",
 }
 
+local function ResolveImage(val)
+	if typeof(val) == "Instance" then
+		if val:IsA("ImageLabel") or val:IsA("ImageButton") then
+			return val.Image
+		end
+		return nil
+	end
+	return val
+end
+
 --// Functions
 local function GetGui()
 	local newGui = Instance.new("ScreenGui")
@@ -1435,7 +1445,7 @@ function MacLib:Window(Settings)
 		settingIcon.Name = "SettingIcon"
 		settingIcon.AnchorPoint = Vector2.new(0, 0.5)
 		settingIcon.BackgroundTransparency = 1
-		settingIcon.Image = Settings.Image or "rbxassetid://113064564506075"
+		settingIcon.Image = ResolveImage(Settings.Image) or "rbxassetid://113064564506075"
 		settingIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
 		settingIcon.ImageTransparency = 1
 		settingIcon.Size = UDim2.fromOffset(0, 16) 
@@ -1606,7 +1616,7 @@ function MacLib:Window(Settings)
 			if Settings.Image then
 				tabImage = Instance.new("ImageLabel")
 				tabImage.Name = "TabImage"
-				tabImage.Image = Settings.Image
+				tabImage.Image = ResolveImage(Settings.Image)
 				tabImage.ImageTransparency = 0.5
 				tabImage.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 				tabImage.BackgroundTransparency = 1
@@ -5186,8 +5196,11 @@ function MacLib:Window(Settings)
 				local activeLabel
 				
 				local function setActiveConfig(name)
-					MacLib.CurrentConfigName = name
-					activeLabel:UpdateName("Active Config: " .. name)
+					MacLib.CurrentConfigName = name or ""
+					
+					if activeLabel then
+						activeLabel:UpdateName("Active Config: " .. tostring(name or "None"))
+					end
 				end
 				
 				configSection:Input({
