@@ -61,16 +61,6 @@ local assets = {
 	sliderhead = "rbxassetid://18772834246",
 }
 
-local function ResolveImage(val)
-	if typeof(val) == "Instance" then
-		if val:IsA("ImageLabel") or val:IsA("ImageButton") then
-			return val.Image
-		end
-		return nil
-	end
-	return val
-end
-
 --// Functions
 local function GetGui()
 	local newGui = Instance.new("ScreenGui")
@@ -611,7 +601,7 @@ function MacLib:Window(Settings)
 	headshot.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	headshot.BorderSizePixel = 0
 	headshot.Size = UDim2.fromOffset(32, 32)
-	headshot.Image = (isReady and headshotImage) or "rbxassetid://0"
+	headshot.Image = ("https://www.roblox.com/headshot-thumbnail/image?userId=%d&width=48&height=48&format=png"):format(userId)
 
 	local uICorner3 = Instance.new("UICorner")
 	uICorner3.Name = "UICorner"
@@ -1445,7 +1435,7 @@ function MacLib:Window(Settings)
 		settingIcon.Name = "SettingIcon"
 		settingIcon.AnchorPoint = Vector2.new(0, 0.5)
 		settingIcon.BackgroundTransparency = 1
-		settingIcon.Image = ResolveImage(Settings.Image) or "rbxassetid://113064564506075"
+		settingIcon.Image = Settings.Image or "rbxassetid://113064564506075"
 		settingIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
 		settingIcon.ImageTransparency = 1
 		settingIcon.Size = UDim2.fromOffset(0, 16) 
@@ -1616,7 +1606,7 @@ function MacLib:Window(Settings)
 			if Settings.Image then
 				tabImage = Instance.new("ImageLabel")
 				tabImage.Name = "TabImage"
-				tabImage.Image = ResolveImage(Settings.Image)
+				tabImage.Image = Settings.Image
 				tabImage.ImageTransparency = 0.5
 				tabImage.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 				tabImage.BackgroundTransparency = 1
@@ -5964,7 +5954,7 @@ function MacLib:Window(Settings)
 
 	local function _SetUserInfoState(State, CustomText)
 		if State then
-			headshot.Image = (isReady and headshotImage) or "rbxassetid://0"
+			headshot.Image = ("rbxthumb://type=AvatarBust&id=%d&w=48&h=48"):format(userId)
 			displayName.Text = LocalPlayer.DisplayName
 			username.Text = CustomText or ("@" .. LocalPlayer.Name)
 		else
@@ -6583,5 +6573,7 @@ function MacLib:Demo()
 	tabs.Main:Select()
 	MacLib:LoadAutoLoadConfig()
 end
+
+MacLib:Demo()
 
 return MacLib
