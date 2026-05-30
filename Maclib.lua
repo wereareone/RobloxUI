@@ -601,7 +601,7 @@ function MacLib:Window(Settings)
 	headshot.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	headshot.BorderSizePixel = 0
 	headshot.Size = UDim2.fromOffset(32, 32)
-	headshot.Image = (isReady and headshotImage) or "rbxassetid://0"
+	headshot.Image = ("https://www.roblox.com/headshot-thumbnail/image?userId=%d&width=48&height=48&format=png"):format(userId)
 
 	local uICorner3 = Instance.new("UICorner")
 	uICorner3.Name = "UICorner"
@@ -5954,7 +5954,7 @@ function MacLib:Window(Settings)
 
 	local function _SetUserInfoState(State, CustomText)
 		if State then
-			headshot.Image = (isReady and headshotImage) or "rbxassetid://0"
+			headshot.Image = ("rbxthumb://type=AvatarBust&id=%d&w=48&h=48"):format(userId)
 			displayName.Text = LocalPlayer.DisplayName
 			username.Text = CustomText or ("@" .. LocalPlayer.Name)
 		else
@@ -6573,5 +6573,7 @@ function MacLib:Demo()
 	tabs.Main:Select()
 	MacLib:LoadAutoLoadConfig()
 end
+
+MacLib:Demo()
 
 return MacLib
