@@ -7,6 +7,7 @@ local MacLib = {
 	CurrentConfigName = "" ,
 	AutoSaveEnabled = false,
 	ThemeObjects = {},
+	SectionStates = {},
 	Theme = {
 		BackgroundColor = Color3.fromRGB(15, 15, 15),     -- Primary Color (Base, Prompts)
 		SectionColor = Color3.fromRGB(0, 0, 0),           -- Background Color (section, dropdown, slider)
@@ -124,6 +125,8 @@ function MacLib:AddThemeObject(Instance, Property, ThemeKey)
 end
 
 function MacLib:Window(Settings)
+	MacLib:LoadSectionStates()
+
 	local WindowFunctions = {Settings = Settings}
 	if Settings.AcrylicBlur ~= nil then
 		acrylicBlur = Settings.AcrylicBlur
@@ -1564,6 +1567,10 @@ function MacLib:Window(Settings)
 
 		function SectionFunctions:Tab(Settings)
 			local TabFunctions = {Settings = Settings}
+
+			if not MacLib.TabInstances then MacLib.TabInstances = {} end
+    		MacLib.TabInstances[Settings.Name] = TabFunctions
+	
 			local tabSwitcher = Instance.new("TextButton")
 			tabSwitcher.Name = "TabSwitcher"
 			tabSwitcher.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
@@ -4500,8 +4507,13 @@ function MacLib:Window(Settings)
 
 				function SectionFunctions:Header(Settings, Flag)
 					local HeaderFunctions = {Settings = Settings}
-					local isExpanded = false
-					local CLOSED_HEIGHT = 50 
+					local headerName = Settings.Text or Settings.Name or "UnknownHeader"
+					
+					if MacLib.SectionStates[headerName] == nil then
+						MacLib.SectionStates[headerName] = false 
+					end
+					local isExpanded = MacLib.SectionStates[headerName]
+					local CLOSED_HEIGHT = 50
 
 					local header = Instance.new("Frame")
 					header.Name = "Header"
@@ -4520,8 +4532,12 @@ function MacLib:Window(Settings)
 					uIPadding.PaddingRight = UDim.new(0, 5)
 					uIPadding.Parent = header
 
-					section.AutomaticSize = Enum.AutomaticSize.None
-					section.Size = UDim2.new(1, 0, 0, CLOSED_HEIGHT)
+					if isExpanded then
+						section.AutomaticSize = Enum.AutomaticSize.Y
+					else
+						section.AutomaticSize = Enum.AutomaticSize.None
+						section.Size = UDim2.new(1, 0, 0, CLOSED_HEIGHT)
+					end
 
 					local headerText = Instance.new("TextLabel")
 					headerText.Name = "HeaderText"
@@ -4554,7 +4570,7 @@ function MacLib:Window(Settings)
 					arrowIcon.Image = "rbxassetid://129275222429257"
 					arrowIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
 					arrowIcon.ImageTransparency = 0.5
-					arrowIcon.Rotation = 0 
+					arrowIcon.Rotation = isExpanded and 180 or 0
 					arrowIcon.Parent = header
 
 					local toggleButton = Instance.new("TextButton")
@@ -4583,6 +4599,9 @@ function MacLib:Window(Settings)
 					local function ToggleSection()
 						if not section:FindFirstChild("SectionUIListLayout") then return end
 						isExpanded = not isExpanded
+
+						MacLib.SectionStates[headerName] = isExpanded
+						MacLib:SaveSectionStates()
 						
 						Tween(arrowIcon, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
 							Rotation = isExpanded and 180 or 0
@@ -4908,6 +4927,14 @@ function MacLib:Window(Settings)
 				tabs[tabSwitcher].tabContent.Parent = content
 				currentTabInstance = tabs[tabSwitcher].tabContent
 				currentTab.Text = Settings.Name
+
+				if writefile then
+					pcall(function()
+						if not isfolder(MacLib.Folder) then makefolder(MacLib.Folder) end
+						writefile(MacLib.Folder .. "/last_tab.txt", Settings.Name)
+					end)
+				end
+
 			end
 
 			tabSwitcher.MouseButton1Click:Connect(function()
@@ -6106,6 +6133,49 @@ function MacLib:Window(Settings)
 		end
 	end
 
+	function MacLib:LoadLastSavedTab(fallbackTab)
+		local loaded = false
+		if isfile and readfile then
+			pcall(function()
+				local path = MacLib.Folder .. "/last_tab.txt"
+				if isfile(path) then
+					local lastTabName = readfile(path)
+					if MacLib.TabInstances and MacLib.TabInstances[lastTabName] then
+						MacLib.TabInstances[lastTabName]:Select()
+						loaded = true
+					end
+				end
+			end)
+		end
+		
+		if not loaded and fallbackTab then
+			fallbackTab:Select()
+		end
+	end
+
+
+	function MacLib:SaveSectionStates()
+		if writefile and HttpService then
+			pcall(function()
+				if not isfolder(MacLib.Folder) then makefolder(MacLib.Folder) end
+				local json = HttpService:JSONEncode(MacLib.SectionStates)
+				writefile(MacLib.Folder .. "/section_states.json", json)
+			end)
+		end
+	end
+
+	function MacLib:LoadSectionStates()
+		if isfile and readfile and HttpService then
+			pcall(function()
+				local path = MacLib.Folder .. "/section_states.json"
+				if isfile(path) then
+					local json = readfile(path)
+					MacLib.SectionStates = HttpService:JSONDecode(json)
+				end
+			end)
+		end
+	end
+
 	function MacLib:LoadAutoLoadConfig()
 		if isStudio or not (isfile and readfile) then return "Config system unavailable." end
 
@@ -6570,7 +6640,7 @@ function MacLib:Demo()
 		print("Unloaded!")
 	end)
 
-	tabs.Main:Select()
+	MacLib:LoadLastSavedTab(tabs.Main)
 	MacLib:LoadAutoLoadConfig()
 end
 
