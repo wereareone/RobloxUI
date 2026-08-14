@@ -124,6 +124,49 @@ function MacLib:AddThemeObject(Instance, Property, ThemeKey)
 	end
 end
 
+function MacLib:SaveSectionStates()
+	if writefile and HttpService then
+		pcall(function()
+			if not isfolder(MacLib.Folder) then makefolder(MacLib.Folder) end
+			local json = HttpService:JSONEncode(MacLib.SectionStates)
+			writefile(MacLib.Folder .. "/section_states.json", json)
+		end)
+	end
+end
+
+function MacLib:LoadSectionStates()
+	if isfile and readfile and HttpService then
+		pcall(function()
+			local path = MacLib.Folder .. "/section_states.json"
+			if isfile(path) then
+				local json = readfile(path)
+				MacLib.SectionStates = HttpService:JSONDecode(json)
+			end
+		end)
+	end
+end
+
+function MacLib:LoadAutoLoadConfig()
+	if isStudio or not (isfile and readfile) then return "Config system unavailable." end
+
+	if isfile(MacLib.Folder .. "/settings/autoload.txt") then
+		local name = readfile(MacLib.Folder .. "/settings/autoload.txt")
+
+		local suc, err = MacLib:LoadConfig(name)
+		if not suc then
+			WindowFunctions:Notify({
+				Title = "Interface",
+				Description = "Error loading autoload config: " .. err
+			})
+		end
+
+		WindowFunctions:Notify({
+			Title = "Interface",
+			Description = string.format("Autoloaded config: %q", name),
+		})
+	end
+end
+
 function MacLib:Window(Settings)
 	MacLib:LoadSectionStates()
 
@@ -6150,50 +6193,6 @@ function MacLib:Window(Settings)
 		
 		if not loaded and fallbackTab then
 			fallbackTab:Select()
-		end
-	end
-
-
-	function MacLib:SaveSectionStates()
-		if writefile and HttpService then
-			pcall(function()
-				if not isfolder(MacLib.Folder) then makefolder(MacLib.Folder) end
-				local json = HttpService:JSONEncode(MacLib.SectionStates)
-				writefile(MacLib.Folder .. "/section_states.json", json)
-			end)
-		end
-	end
-
-	function MacLib:LoadSectionStates()
-		if isfile and readfile and HttpService then
-			pcall(function()
-				local path = MacLib.Folder .. "/section_states.json"
-				if isfile(path) then
-					local json = readfile(path)
-					MacLib.SectionStates = HttpService:JSONDecode(json)
-				end
-			end)
-		end
-	end
-
-	function MacLib:LoadAutoLoadConfig()
-		if isStudio or not (isfile and readfile) then return "Config system unavailable." end
-
-		if isfile(MacLib.Folder .. "/settings/autoload.txt") then
-			local name = readfile(MacLib.Folder .. "/settings/autoload.txt")
-
-			local suc, err = MacLib:LoadConfig(name)
-			if not suc then
-				WindowFunctions:Notify({
-					Title = "Interface",
-					Description = "Error loading autoload config: " .. err
-				})
-			end
-
-			WindowFunctions:Notify({
-				Title = "Interface",
-				Description = string.format("Autoloaded config: %q", name),
-			})
 		end
 	end
 
