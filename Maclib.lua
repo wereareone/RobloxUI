@@ -7,6 +7,7 @@ local MacLib = {
 	CurrentConfigName = "" ,
 	AutoSaveEnabled = false,
 	ThemeObjects = {},
+	SectionStates = {},
 	Theme = {
 		BackgroundColor = Color3.fromRGB(15, 15, 15),     -- Primary Color (Base, Prompts)
 		SectionColor = Color3.fromRGB(0, 0, 0),           -- Background Color (section, dropdown, slider)
@@ -123,7 +124,52 @@ function MacLib:AddThemeObject(Instance, Property, ThemeKey)
 	end
 end
 
+function MacLib:SaveSectionStates()
+	if writefile and HttpService then
+		pcall(function()
+			if not isfolder(MacLib.Folder) then makefolder(MacLib.Folder) end
+			local json = HttpService:JSONEncode(MacLib.SectionStates)
+			writefile(MacLib.Folder .. "/section_states.json", json)
+		end)
+	end
+end
+
+function MacLib:LoadSectionStates()
+	if isfile and readfile and HttpService then
+		pcall(function()
+			local path = MacLib.Folder .. "/section_states.json"
+			if isfile(path) then
+				local json = readfile(path)
+				MacLib.SectionStates = HttpService:JSONDecode(json)
+			end
+		end)
+	end
+end
+
+function MacLib:LoadAutoLoadConfig()
+	if isStudio or not (isfile and readfile) then return "Config system unavailable." end
+
+	if isfile(MacLib.Folder .. "/settings/autoload.txt") then
+		local name = readfile(MacLib.Folder .. "/settings/autoload.txt")
+
+		local suc, err = MacLib:LoadConfig(name)
+		if not suc then
+			WindowFunctions:Notify({
+				Title = "Interface",
+				Description = "Error loading autoload config: " .. err
+			})
+		end
+
+		WindowFunctions:Notify({
+			Title = "Interface",
+			Description = string.format("Autoloaded config: %q", name),
+		})
+	end
+end
+
 function MacLib:Window(Settings)
+	MacLib:LoadSectionStates()
+
 	local WindowFunctions = {Settings = Settings}
 	if Settings.AcrylicBlur ~= nil then
 		acrylicBlur = Settings.AcrylicBlur
@@ -132,6 +178,53 @@ function MacLib:Window(Settings)
 	end
 
 	local macLib = GetGui()
+
+	local TooltipGui = Instance.new("Frame")
+	TooltipGui.Name = "Tooltip"
+	TooltipGui.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	TooltipGui.BackgroundTransparency = 0.1
+	TooltipGui.ZIndex = 99
+	TooltipGui.Visible = false
+	TooltipGui.AutomaticSize = Enum.AutomaticSize.XY
+	TooltipGui.Parent = macLib
+
+	Instance.new("UICorner", TooltipGui).CornerRadius = UDim.new(0, 4)
+	local TooltipStroke = Instance.new("UIStroke", TooltipGui)
+	TooltipStroke.Color = Color3.fromRGB(200, 200, 200)
+	TooltipStroke.Transparency = 0.8
+
+	local TooltipPadding = Instance.new("UIPadding", TooltipGui)
+	TooltipPadding.PaddingTop = UDim.new(0, 6)
+	TooltipPadding.PaddingBottom = UDim.new(0, 6)
+	TooltipPadding.PaddingLeft = UDim.new(0, 8)
+	TooltipPadding.PaddingRight = UDim.new(0, 8)
+
+	Instance.new("UISizeConstraint", TooltipGui).MaxSize = Vector2.new(250, 9e9)
+
+	local TooltipText = Instance.new("TextLabel", TooltipGui)
+	TooltipText.BackgroundTransparency = 1
+	TooltipText.FontFace = Font.new(assets.interFont, Enum.FontWeight.Medium)
+	TooltipText.TextColor3 = Color3.fromRGB(220, 220, 220)
+	TooltipText.TextSize = 12
+	TooltipText.AutomaticSize = Enum.AutomaticSize.XY
+	TooltipText.TextWrapped = true
+	TooltipText.TextXAlignment = Enum.TextXAlignment.Left
+
+	local function ShowTooltip(text)
+		TooltipText.Text = text
+		TooltipGui.Visible = true
+	end
+	
+	local function HideTooltip()
+		TooltipGui.Visible = false
+	end
+
+	UserInputService.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement and TooltipGui.Visible then
+			local mouseLocation = UserInputService:GetMouseLocation()
+			TooltipGui.Position = UDim2.new(0, mouseLocation.X + 15, 0, mouseLocation.Y - 15)
+		end
+	end)
 
 	local notifications = Instance.new("Frame")
 	notifications.Name = "Notifications"
@@ -1564,6 +1657,10 @@ function MacLib:Window(Settings)
 
 		function SectionFunctions:Tab(Settings)
 			local TabFunctions = {Settings = Settings}
+
+			if not MacLib.TabInstances then MacLib.TabInstances = {} end
+    		MacLib.TabInstances[Settings.Name] = TabFunctions
+	
 			local tabSwitcher = Instance.new("TextButton")
 			tabSwitcher.Name = "TabSwitcher"
 			tabSwitcher.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json")
@@ -1802,7 +1899,7 @@ function MacLib:Window(Settings)
 					buttonInteract.BackgroundTransparency = 1
 					buttonInteract.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					buttonInteract.BorderSizePixel = 0
-					buttonInteract.Size = UDim2.fromScale(1, 1)
+					buttonInteract.Size = UDim2.new(1, ButtonFunctions.Settings.Shortdesc and -50 or -20, 1, 0)
 					buttonInteract.Parent = button
 					buttonInteract.Text = ButtonFunctions.Settings.Name
 
@@ -1819,12 +1916,60 @@ function MacLib:Window(Settings)
 					buttonImage.Size = UDim2.fromOffset(15, 15)
 					buttonImage.Parent = button
 
+					local currentDesc = ButtonFunctions.Settings.Shortdesc
+					local infoIcon = Instance.new("ImageButton")
+					infoIcon.Name = "InfoIcon"
+					infoIcon.Size = UDim2.fromOffset(18, 18)
+					infoIcon.AnchorPoint = Vector2.new(1, 0.5)
+					infoIcon.Position = UDim2.new(1, -25, 0.5, 0)
+					infoIcon.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+					infoIcon.BackgroundTransparency = 0.5
+					infoIcon.Image = "rbxassetid://108500499335757"
+					infoIcon.ImageColor3 = Color3.fromRGB(180, 180, 180)
+					infoIcon.Visible = (currentDesc ~= nil and currentDesc ~= "")
+					infoIcon.ZIndex = 5
+					infoIcon.Parent = button
+					
+					Instance.new("UICorner", infoIcon).CornerRadius = UDim.new(0, 4)
+					local infoStroke = Instance.new("UIStroke", infoIcon)
+					infoStroke.Color = Color3.fromRGB(255, 255, 255)
+					infoStroke.Transparency = 0.8
+
+					infoIcon.MouseEnter:Connect(function()
+						Tween(infoIcon, TweenInfo.new(0.2), {BackgroundTransparency = 0, ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+						if currentDesc and currentDesc ~= "" then
+							ShowTooltip(currentDesc)
+						end
+					end)
+					
+					infoIcon.MouseLeave:Connect(function()
+						Tween(infoIcon, TweenInfo.new(0.2), {BackgroundTransparency = 0.5, ImageColor3 = Color3.fromRGB(180, 180, 180)}):Play()
+						HideTooltip()
+					end)
+
 					local TweenSettings = {
 						DefaultTransparency = 0.5,
 						HoverTransparency = 0.3,
 
 						EasingStyle = Enum.EasingStyle.Sine
 					}
+
+					function ButtonFunctions:UpdateName(Name)
+						buttonInteract.Text = Name
+					end
+					function ButtonFunctions:SetVisibility(State)
+						button.Visible = State
+					end
+					
+					function ButtonFunctions:UpdateShortdesc(desc)
+						currentDesc = desc
+						infoIcon.Visible = (desc ~= nil and desc ~= "")
+						buttonInteract.Size = UDim2.new(1, infoIcon.Visible and -50 or -20, 1, 0)
+						
+						if TooltipGui and TooltipGui.Visible then
+							ShowTooltip(desc)
+						end
+					end
 
 					local function ChangeState(State)
 						if State == "Idle" then
@@ -1901,7 +2046,7 @@ function MacLib:Window(Settings)
 					toggleName.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					toggleName.BorderSizePixel = 0
 					toggleName.Position = UDim2.fromScale(0, 0.5)
-					toggleName.Size = UDim2.new(1, -50, 0, 0)
+					toggleName.Size = UDim2.new(1, ToggleFunctions.Settings.Shortdesc and -75 or -50, 0, 0)
 					toggleName.Parent = toggle
 
 					local toggle1 = Instance.new("ImageButton")
@@ -1942,6 +2087,37 @@ function MacLib:Window(Settings)
 					togglerHead.ImageTransparency = 0.8
 
 					toggle1.Parent = toggle
+
+					local currentDesc = ToggleFunctions.Settings.Shortdesc
+					local infoIcon = Instance.new("ImageButton")
+					infoIcon.Name = "InfoIcon"
+					infoIcon.Size = UDim2.fromOffset(18, 18)
+					infoIcon.AnchorPoint = Vector2.new(1, 0.5)
+					infoIcon.Position = UDim2.new(1, -48, 0.5, 0)
+					infoIcon.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+					infoIcon.BackgroundTransparency = 0.5
+					infoIcon.Image = "rbxassetid://108500499335757"
+					infoIcon.ImageColor3 = Color3.fromRGB(180, 180, 180)
+					
+					infoIcon.Visible = (currentDesc ~= nil and currentDesc ~= "")
+					infoIcon.Parent = toggle
+					
+					Instance.new("UICorner", infoIcon).CornerRadius = UDim.new(0, 4)
+					local infoStroke = Instance.new("UIStroke", infoIcon)
+					infoStroke.Color = Color3.fromRGB(255, 255, 255)
+					infoStroke.Transparency = 0.8
+
+					infoIcon.MouseEnter:Connect(function()
+						Tween(infoIcon, TweenInfo.new(0.2), {BackgroundTransparency = 0, ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+						if currentDesc and currentDesc ~= "" then
+							ShowTooltip(currentDesc)
+						end
+					end)
+					
+					infoIcon.MouseLeave:Connect(function()
+						Tween(infoIcon, TweenInfo.new(0.2), {BackgroundTransparency = 0.5, ImageColor3 = Color3.fromRGB(180, 180, 180)}):Play()
+						HideTooltip()
+					end)
 
 					local toggle1Transparency = {Enabled = 0, Disabled = 0.5}
 					local togglerHeadTransparency = {Enabled = 0, Disabled = 0.85}
@@ -1989,6 +2165,14 @@ function MacLib:Window(Settings)
 
 					function ToggleFunctions:Toggle()
 						Toggle()
+					end
+					function ToggleFunctions:UpdateShortdesc(desc)
+						currentDesc = desc
+						infoIcon.Visible = (desc ~= nil and desc ~= "")
+						toggleName.Size = UDim2.new(1, infoIcon.Visible and -75 or -50, 0, 0)
+						if TooltipGui.Visible then
+							ShowTooltip(desc)
+						end
 					end
 					function ToggleFunctions:UpdateState(State)
 						togglebool = State
@@ -2883,7 +3067,10 @@ function MacLib:Window(Settings)
 									table.remove(Selected, idx)
 								end
 							else
-								Selected = {}
+								if Selected[1] == optionName then
+									Selected = {}
+									DropdownFunctions.Value = nil
+								end
 							end
 							Tween(checkmark, TweenInfo.new(tweensettings.duration, tweensettings.easingStyle), {
 								Size = UDim2.new(checkmark.Size.X.Scale, tweensettings.checkSizeDecrease, checkmark.Size.Y.Scale, checkmark.Size.Y.Offset)
@@ -3113,27 +3300,32 @@ function MacLib:Window(Settings)
 						end
 
 						local selectedOptions = {}
+						
 						if type(newSelection) == "number" then
 							for option, data in pairs(OptionObjs) do
-								local isSelected = data.Index == newSelection
-								Toggle(option, isSelected)
-								if isSelected then
+								if data.Index == newSelection then
+									Toggle(option, true)
 									table.insert(selectedOptions, option)
 								end
 							end
 						elseif type(newSelection) == "string" then
 							for option, data in pairs(OptionObjs) do
-								local isSelected = option == newSelection
-								Toggle(option, isSelected)
-								if isSelected then
+								if option == newSelection then
+									Toggle(option, true)
 									table.insert(selectedOptions, option)
 								end
 							end
 						elseif type(newSelection) == "table" then
 							for option, _ in pairs(OptionObjs) do
-								local isSelected = table.find(newSelection, option) ~= nil
-								Toggle(option, isSelected)
+								local isSelected = false
+								if newSelection[option] ~= nil then 
+									isSelected = newSelection[option] == true 
+								else 
+									isSelected = table.find(newSelection, option) ~= nil 
+								end
+								
 								if isSelected then
+									Toggle(option, true)
 									table.insert(selectedOptions, option)
 								end
 							end
@@ -4500,8 +4692,13 @@ function MacLib:Window(Settings)
 
 				function SectionFunctions:Header(Settings, Flag)
 					local HeaderFunctions = {Settings = Settings}
-					local isExpanded = false
-					local CLOSED_HEIGHT = 50 
+					local headerName = Settings.Text or Settings.Name or "UnknownHeader"
+					
+					if MacLib.SectionStates[headerName] == nil then
+						MacLib.SectionStates[headerName] = false 
+					end
+					local isExpanded = MacLib.SectionStates[headerName]
+					local CLOSED_HEIGHT = 50
 
 					local header = Instance.new("Frame")
 					header.Name = "Header"
@@ -4520,8 +4717,12 @@ function MacLib:Window(Settings)
 					uIPadding.PaddingRight = UDim.new(0, 5)
 					uIPadding.Parent = header
 
-					section.AutomaticSize = Enum.AutomaticSize.None
-					section.Size = UDim2.new(1, 0, 0, CLOSED_HEIGHT)
+					if isExpanded then
+						section.AutomaticSize = Enum.AutomaticSize.Y
+					else
+						section.AutomaticSize = Enum.AutomaticSize.None
+						section.Size = UDim2.new(1, 0, 0, CLOSED_HEIGHT)
+					end
 
 					local headerText = Instance.new("TextLabel")
 					headerText.Name = "HeaderText"
@@ -4551,10 +4752,10 @@ function MacLib:Window(Settings)
 					arrowIcon.Position = UDim2.new(1, 0, 0.5, 0)
 					arrowIcon.Size = UDim2.fromOffset(14, 14)
 					arrowIcon.BackgroundTransparency = 1
-					arrowIcon.Image = "rbxassetid://129275222429257"
+					arrowIcon.Image = "rbxassetid://96560127648976"
 					arrowIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
 					arrowIcon.ImageTransparency = 0.5
-					arrowIcon.Rotation = 0 
+					arrowIcon.Rotation = isExpanded and -90 or 0
 					arrowIcon.Parent = header
 
 					local toggleButton = Instance.new("TextButton")
@@ -4583,9 +4784,12 @@ function MacLib:Window(Settings)
 					local function ToggleSection()
 						if not section:FindFirstChild("SectionUIListLayout") then return end
 						isExpanded = not isExpanded
+
+						MacLib.SectionStates[headerName] = isExpanded
+						MacLib:SaveSectionStates()
 						
 						Tween(arrowIcon, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-							Rotation = isExpanded and 180 or 0
+							Rotation = isExpanded and -90 or 0
 						}):Play()
 
 						local elements = GetElementsUnderHeader()
@@ -4908,6 +5112,14 @@ function MacLib:Window(Settings)
 				tabs[tabSwitcher].tabContent.Parent = content
 				currentTabInstance = tabs[tabSwitcher].tabContent
 				currentTab.Text = Settings.Name
+
+				if writefile then
+					pcall(function()
+						if not isfolder(MacLib.Folder) then makefolder(MacLib.Folder) end
+						writefile(MacLib.Folder .. "/last_tab.txt", Settings.Name)
+					end)
+				end
+
 			end
 
 			tabSwitcher.MouseButton1Click:Connect(function()
@@ -6106,24 +6318,23 @@ function MacLib:Window(Settings)
 		end
 	end
 
-	function MacLib:LoadAutoLoadConfig()
-		if isStudio or not (isfile and readfile) then return "Config system unavailable." end
-
-		if isfile(MacLib.Folder .. "/settings/autoload.txt") then
-			local name = readfile(MacLib.Folder .. "/settings/autoload.txt")
-
-			local suc, err = MacLib:LoadConfig(name)
-			if not suc then
-				WindowFunctions:Notify({
-					Title = "Interface",
-					Description = "Error loading autoload config: " .. err
-				})
-			end
-
-			WindowFunctions:Notify({
-				Title = "Interface",
-				Description = string.format("Autoloaded config: %q", name),
-			})
+	function MacLib:LoadLastSavedTab(fallbackTab)
+		local loaded = false
+		if isfile and readfile then
+			pcall(function()
+				local path = MacLib.Folder .. "/last_tab.txt"
+				if isfile(path) then
+					local lastTabName = readfile(path)
+					if MacLib.TabInstances and MacLib.TabInstances[lastTabName] then
+						MacLib.TabInstances[lastTabName]:Select()
+						loaded = true
+					end
+				end
+			end)
+		end
+		
+		if not loaded and fallbackTab then
+			fallbackTab:Select()
 		end
 	end
 
@@ -6570,7 +6781,7 @@ function MacLib:Demo()
 		print("Unloaded!")
 	end)
 
-	tabs.Main:Select()
+	MacLib:LoadLastSavedTab(tabs.Main)
 	MacLib:LoadAutoLoadConfig()
 end
 
