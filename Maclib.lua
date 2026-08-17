@@ -154,16 +154,10 @@ function MacLib:LoadAutoLoadConfig()
 
 		local suc, err = MacLib:LoadConfig(name)
 		if not suc then
-			WindowFunctions:Notify({
-				Title = "Interface",
-				Description = "Error loading autoload config: " .. err
-			})
-		end
-
-		WindowFunctions:Notify({
-			Title = "Interface",
-			Description = string.format("Autoloaded config: %q", name),
-		})
+			warn("Error loading autoload config: " .. tostring(err))
+		else
+            print(string.format("Autoloaded config: %q", name))
+        end
 	end
 end
 
